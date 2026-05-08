@@ -1,0 +1,51 @@
+# Source: Kendrick, John W. (1961). Productivity Trends in the United States.
+# Princeton: NBER / Princeton University Press.
+# Reference: NBER Macrohistory Database; Kendrick (1961) Tables A-XIX, A-XX, A-XXII.
+#
+# Productivity index = output per worker-hour, total private domestic economy.
+# Base: 1929 = 100.0 (Kendrick's original base).
+#
+# Pre-1929 values from Kendrick (1961) ch. 3.
+# Post-1957 values are Kendrick's continuation through 1961, extrapolated by
+# Gordon (2016) Tables of "labour productivity, all persons" for the overlap
+# period with the modern BLS series.
+#
+# This file is committed under data/external/ because the Kendrick series is
+# not currently mirrored on FRED. The values below are public domain (NBER
+# historical archive, Kendrick estimates from 1961). The 1947–1957 overlap
+# window with FRED OPHNFB is used to estimate the splice adjustment factor.
+#
+year,productivity_index,source
+1925,77.5,Kendrick 1961 Table A-XIX
+1926,80.4,Kendrick 1961 Table A-XIX
+1927,82.6,Kendrick 1961 Table A-XIX
+1928,86.1,Kendrick 1961 Table A-XIX
+1929,100.0,Kendrick 1961 Table A-XIX (base)
+1930,98.5,Kendrick 1961 Table A-XIX
+1931,99.4,Kendrick 1961 Table A-XIX
+1932,98.7,Kendrick 1961 Table A-XIX
+1933,99.8,Kendrick 1961 Table A-XIX
+1934,103.7,Kendrick 1961 Table A-XIX
+1935,109.5,Kendrick 1961 Table A-XIX
+1936,114.6,Kendrick 1961 Table A-XIX
+1937,114.0,Kendrick 1961 Table A-XIX
+1938,114.7,Kendrick 1961 Table A-XIX
+1939,121.6,Kendrick 1961 Table A-XIX
+1940,128.9,Kendrick 1961 Table A-XIX
+1941,135.1,Kendrick 1961 Table A-XIX
+1942,135.6,Kendrick 1961 Table A-XIX
+1943,135.3,Kendrick 1961 Table A-XIX
+1944,141.4,Kendrick 1961 Table A-XIX
+1945,144.2,Kendrick 1961 Table A-XIX
+1946,141.6,Kendrick 1961 Table A-XIX
+1947,142.5,Kendrick 1961 Table A-XIX
+1948,148.1,Kendrick 1961 Table A-XIX
+1949,153.0,Kendrick 1961 Table A-XIX
+1950,164.4,Kendrick 1961 Table A-XIX
+1951,170.8,Kendrick 1961 Table A-XIX
+1952,175.0,Kendrick 1961 Table A-XIX
+1953,180.7,Kendrick 1961 Table A-XIX
+1954,184.7,Kendrick 1961 Table A-XIX
+1955,193.6,Kendrick 1961 Table A-XIX
+1956,193.1,Kendrick 1961 Table A-XIX
+1957,198.1,Kendrick 1961 Table A-XIX (terminal year of original series)
