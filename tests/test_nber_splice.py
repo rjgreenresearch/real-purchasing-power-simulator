@@ -673,3 +673,78 @@ class TestCatalogIntegrity:
                 f"{sid} is loaded by rpps.metrics.compute_all but is not in "
                 f"FRED_SERIES; `make metrics` will fail after `make data`."
             )
+
+
+# ---------------------------------------------------------------------------
+# Splice overlap-window coverage
+# ---------------------------------------------------------------------------
+
+class TestSpliceOverlapCoverage:
+    """The splice's overlap window must fall within both legs' declared
+    coverage. If `WAGE_MODERN_SERIES` claims to start in year Y but the
+    overlap window starts in year Y' < Y, `make data` succeeds (the catalog
+    downloads correctly) but the splice fails at runtime with "No paired
+    observations in overlap window."
+
+    Regression test for the v0.3.7 fix where AHETPI was declared 1939+ in
+    the catalog but actually begins in Jan 1964, leaving the 1939-1942
+    overlap window populated only on the legacy side.
+    """
+
+    def test_wage_overlap_within_modern_series_coverage(self):
+        from rpps.fred_loader import FRED_SERIES
+        from rpps.nber_splice import (
+            WAGE_MODERN_SERIES,
+            WAGE_OVERLAP_END,
+            WAGE_OVERLAP_START,
+        )
+        modern = FRED_SERIES[WAGE_MODERN_SERIES]
+        overlap_start_year = pd.Timestamp(WAGE_OVERLAP_START).year
+        overlap_end_year = pd.Timestamp(WAGE_OVERLAP_END).year
+        assert modern.start_year <= overlap_start_year, (
+            f"{WAGE_MODERN_SERIES} starts in {modern.start_year}, but the "
+            f"wage splice's overlap window begins in {overlap_start_year}. "
+            f"The overlap will have zero modern observations and the splice "
+            f"will fail with 'No paired observations in overlap window'."
+        )
+        # End year is harder to enforce strictly because FRED series often
+        # update past their declared start; accept overlap_end <= 2030.
+        assert overlap_end_year >= overlap_start_year
+
+    def test_wage_overlap_within_legacy_series_coverage(self):
+        from rpps.fred_loader import FRED_SERIES
+        from rpps.nber_splice import (
+            WAGE_LEGACY_SERIES,
+            WAGE_OVERLAP_END,
+            WAGE_OVERLAP_START,
+        )
+        legacy = FRED_SERIES[WAGE_LEGACY_SERIES]
+        overlap_start_year = pd.Timestamp(WAGE_OVERLAP_START).year
+        overlap_end_year = pd.Timestamp(WAGE_OVERLAP_END).year
+        assert legacy.start_year <= overlap_start_year, (
+            f"{WAGE_LEGACY_SERIES} starts in {legacy.start_year}, but the "
+            f"wage splice's overlap window begins in {overlap_start_year}."
+        )
+        # NBER macrohistory series have known coverage end dates; if the
+        # series is in the catalog as ending before the overlap window,
+        # the splice cannot work.
+        # Note: FredSeries doesn't track end_year in this version; if added
+        # later, we'd assert legacy.end_year >= overlap_end_year here.
+        assert overlap_end_year >= overlap_start_year
+
+    def test_productivity_overlap_within_modern_series_coverage(self):
+        from rpps.fred_loader import FRED_SERIES
+        from rpps.nber_splice import (
+            PROD_MODERN_SERIES,
+            PROD_OVERLAP_END,
+            PROD_OVERLAP_START,
+        )
+        modern = FRED_SERIES[PROD_MODERN_SERIES]
+        overlap_start_year = pd.Timestamp(PROD_OVERLAP_START).year
+        assert modern.start_year <= overlap_start_year, (
+            f"{PROD_MODERN_SERIES} starts in {modern.start_year}, but the "
+            f"productivity splice's overlap window begins in {overlap_start_year}."
+        )
+        # The legacy productivity series is the Kendrick CSV, which is
+        # loaded from disk separately and not in FRED_SERIES.
+        assert pd.Timestamp(PROD_OVERLAP_END).year >= overlap_start_year

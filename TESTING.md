@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.3.6: **274 tests, 0 failed, ~17 s wall-clock**.
+Expected baseline as of v0.3.7: **277 tests, 0 failed, ~23 s wall-clock**.
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
 suspect is `pip install -e ".[dev]" --break-system-packages` not having been
@@ -329,7 +329,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.3.6 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.3.7 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -534,6 +534,24 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.3.7 — Wage splice modern leg correction**. The catalog declared
+  `AHETPI` (the splice's modern leg) as starting in 1939, but FRED's
+  AHETPI series is "Total Private" production-worker wages and only
+  begins in **Jan 1964**. The splice's overlap window of 1939Q1-1942Q4
+  therefore had zero observations on the modern side, and `make data`
+  crashed with `ValueError: No paired observations in overlap window`.
+  Switched `WAGE_MODERN_SERIES` from `AHETPI` to `AHEMAN` (Average
+  Hourly Earnings of Production and Nonsupervisory Employees,
+  **Manufacturing**), which actually starts in Jan 1939 and is
+  industry-consistent with the M08142USM055NNBR NBER manufacturing leg.
+  AHETPI remains in the catalog with its true start year (1964) as a
+  post-1964 broader-industry reference. Updated the splice docstring,
+  the FRED catalog metadata, the README's splice-methodology section,
+  the `wage_series_id` audit string in `compute_all`, and DATA_ACQUISITION.md.
+  Added three new `TestSpliceOverlapCoverage` regression tests that
+  assert the splice's overlap window falls within both legs' declared
+  coverage — would have caught this at test time.
+
 - **v0.3.6 — Wage-splice series ID correction**. The `WAGE_LEGACY_SERIES`
   constant declared in v0.3.5 was `M0844AUSM052NNBR`, which is not a real
   FRED series ID. FRED returned a 400 Bad Request when `make data` tried
@@ -644,4 +662,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.3.6. Maintained by the `rpps` authors.*
+*Last updated: v0.3.7. Maintained by the `rpps` authors.*

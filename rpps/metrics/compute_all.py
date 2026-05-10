@@ -59,7 +59,7 @@ def _run_rpph(output_dir: Path, frequency: str) -> dict[str, Any]:
     try:
         wages = load_spliced_wages()
         panel = basket_cost_panel(frequency=frequency)
-        result = compute_rpph(panel, wages, wage_series_id="AHETPI+M0844_spliced")
+        result = compute_rpph(panel, wages, wage_series_id="AHEMAN+M08142USM055NNBR_spliced")
         paths = save_rpph_result(result, output_dir)
         return {
             "metric": "RPPH",

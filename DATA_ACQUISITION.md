@@ -34,7 +34,8 @@ The simulator reads the key from the `FRED_API_KEY` environment variable. Downlo
 
 | Series ID | Description | Frequency | Coverage |
 |-----------|-------------|-----------|----------|
-| `AHETPI` | Avg Hourly Earnings of Production and Nonsupervisory Employees | Monthly | 1939+ |
+| `AHEMAN` | Avg Hourly Earnings, Production and Nonsupervisory Employees, Manufacturing | Monthly | 1939+ |
+| `AHETPI` | Avg Hourly Earnings, Production and Nonsupervisory Employees, Total Private | Monthly | 1964+ |
 | `CES0500000003` | Avg Hourly Earnings of All Employees: Total Private | Monthly | 2006+ |
 | `COMPRNFB` | Real Compensation per Hour, Nonfarm Business | Quarterly | 1947+ |
 | `COMPNFB` | Compensation per Hour, Nonfarm Business (nominal) | Quarterly | 1947+ |

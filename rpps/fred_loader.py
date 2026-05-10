@@ -96,9 +96,21 @@ FRED_SERIES: dict[str, FredSeries] = {
         "WPU101", "PPI by Commodity: Iron and Steel", "M", 1926, "price"),
 
     # ------------------------------------------------------------------ Wages (A.2)
+    "AHEMAN": FredSeries(
+        "AHEMAN",
+        "Avg Hourly Earnings of Production and Nonsupervisory Employees, Manufacturing",
+        "M", 1939, "wage",
+        notes="Modern leg of the wage splice (see rpps.nber_splice.WAGE_MODERN_SERIES). "
+              "BLS Current Employment Statistics, NSA. Industry-consistent with the "
+              "M08142USM055NNBR NBER manufacturing series used pre-1939."),
     "AHETPI": FredSeries(
-        "AHETPI", "Avg Hourly Earnings of Production and Nonsupervisory Employees", "M", 1939, "wage",
-        notes="Principal nominal wage series. Spliced with M0844 pre-1939."),
+        "AHETPI",
+        "Avg Hourly Earnings of Production and Nonsupervisory Employees, Total Private",
+        "M", 1964, "wage",
+        notes="Total Private aggregate; only available from Jan 1964 onward, "
+              "which is why the splice uses AHEMAN (manufacturing, 1939+) as "
+              "its modern leg. AHETPI remains useful as a broader-industry "
+              "reference for post-1964 analyses."),
     "M08142USM055NNBR": FredSeries(
         "M08142USM055NNBR",
         "Average Hourly Earnings, Twenty-Five Manufacturing Industries (NBER)",

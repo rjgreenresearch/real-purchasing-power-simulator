@@ -6,14 +6,18 @@ Implements §4.1 of:
     Green, R. J. (2026). The Inflationary Yardstick. Working Paper.
 
 The constraint on long-horizon U.S. economic analysis is that several principal
-FRED series begin only in 1939 (AHETPI, the principal nominal-wage series) or
-1947 (OPHNFB, the principal productivity series). Pre-1947 data must be drawn
-from the NBER Macrohistory archive and spliced to the FRED series.
+FRED series begin only in 1939 (AHEMAN, the manufacturing-AHE series used as
+the modern leg of the wage splice; AHETPI for "Total Private" production-worker
+wages begins only in 1964) or 1947 (OPHNFB, the principal productivity series).
+Pre-1947 data must be drawn from the NBER Macrohistory archive and spliced to
+the FRED series.
 
 This module implements two principal splices:
 
 1. WAGE SPLICE
-   AHETPI (1939+, monthly) <-> M08142USM055NNBR (1920-1948, monthly)
+   AHEMAN (1939+, monthly) <-> M08142USM055NNBR (1920-1948, monthly)
+   Both series are NSA monthly average hourly earnings in manufacturing
+   production work, so the splice is industry-consistent end-to-end.
    Overlap window: 1939Q1 - 1942Q4 (4 years of monthly data, ~48 observations)
 
 2. PRODUCTIVITY SPLICE
@@ -60,7 +64,7 @@ logger = logging.getLogger(__name__)
 EXTERNAL_DIR = REPO_ROOT / "data" / "external"
 
 # Wage splice
-WAGE_MODERN_SERIES = "AHETPI"        # FRED, 1939+, monthly
+WAGE_MODERN_SERIES = "AHEMAN"        # FRED, 1939+, monthly (manufacturing production workers, NSA)
 WAGE_LEGACY_SERIES = "M08142USM055NNBR"  # NBER mirror on FRED, 1920-1948, monthly
 WAGE_OVERLAP_START = "1939-01-01"
 WAGE_OVERLAP_END = "1942-12-31"
@@ -303,10 +307,12 @@ def _check_boundary_continuity(
 def load_spliced_wages(
     cache_dir: str | Path | None = None,
 ) -> pd.Series:
-    """Convenience accessor: load the spliced 1925–present nominal-wage series.
+    """Convenience accessor: load the spliced 1920-present manufacturing
+    nominal-wage series.
 
-    Returns a monthly-frequency pandas Series, with the AHETPI series after 1939
-    and the M0844 series (level-adjusted) before 1939.
+    Returns a monthly-frequency pandas Series, with the AHEMAN series (BLS
+    manufacturing AHE production workers) after 1939 and the M08142USM055NNBR
+    series (NBER manufacturing AHE, level-adjusted) before 1939.
     """
     result = build_wage_splice(cache_dir=cache_dir)
     return result.spliced

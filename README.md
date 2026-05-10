@@ -65,8 +65,8 @@ from rpps.metrics import compute_rpph, compute_wicr, compute_prwdi
 
 # RPPH — Real Purchasing Power Hours
 panel = basket_cost_panel(frequency="M")               # nominal cost of the fixed basket
-wages = load_series("AHETPI")                          # production-worker hourly wage
-rpph = compute_rpph(panel, wages, wage_series_id="AHETPI")
+wages = load_series("AHEMAN")                          # manufacturing production-worker hourly wage (1939+)
+rpph = compute_rpph(panel, wages, wage_series_id="AHEMAN")
 print(rpph.composite.tail())                           # hours of labor to buy the basket
 
 # WICR — Wage-Inflation Capture Ratio
@@ -164,14 +164,16 @@ real-purchasing-power-simulator/
 
 ## The splice methodology (the part most likely to need iteration)
 
-For the principal nominal-wage series, the FRED `AHETPI` (Average Hourly Earnings of Production and Nonsupervisory Employees, 1939+) is the canonical post-1939 source. Pre-1939, the NBER Macrohistory series `M08142USM055NNBR` (Average Hourly Earnings, Twenty-Five Manufacturing Industries, monthly, 1920–1948) is the closest available substitute.
+For the principal nominal-wage series, the simulator uses the FRED `AHEMAN` (Average Hourly Earnings of Production and Nonsupervisory Employees, **Manufacturing**, 1939+) as the modern leg, paired pre-1939 with the NBER Macrohistory series `M08142USM055NNBR` (Average Hourly Earnings, Twenty-Five Manufacturing Industries, monthly, 1920–1948). Both series are NSA monthly average hourly earnings of manufacturing production workers, which makes the splice industry-consistent end-to-end.
+
+(Note: FRED's `AHETPI` "Total Private" series, often the default citation in modern wage analysis, is **only available from Jan 1964 onward**, so it cannot anchor a 1920s-present splice. AHETPI remains in the catalog as a post-1964 broader-industry reference.)
 
 The simulator splices using a multiplicative level adjustment computed over the 1939Q1–1942Q4 overlap window:
 
 ```
-λ = geometric_mean(AHETPI_t / M0844_t)  for t ∈ overlap window
-spliced_wage_t = M0844_t · λ            for t < 1939
-spliced_wage_t = AHETPI_t                for t ≥ 1939
+λ = geometric_mean(AHEMAN_t / M08142_t)  for t ∈ overlap window
+spliced_wage_t = M08142_t · λ             for t < 1939
+spliced_wage_t = AHEMAN_t                 for t ≥ 1939
 ```
 
 The geometric mean is preferred over the arithmetic mean because both series are positive and the relationship is multiplicative rather than additive. The approach is standard for chained price/wage series; see Boskin et al. (1996) §3 and BLS Handbook of Methods Ch. 10 for the related CPI substitution methodology.
