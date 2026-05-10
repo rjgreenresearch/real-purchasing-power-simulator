@@ -364,17 +364,26 @@ class TestModuleEntryPoint:
     the script invocation works."""
 
     def test_module_runs_as_script(self, tmp_path: Path):
+        import os
         import subprocess
         import sys
 
+        # PYTHONIOENCODING + explicit UTF-8 decode so the test is portable
+        # to Windows hosts whose default console codec is cp1252.
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         # Run with --help to avoid needing any data; still exercises argparse.
         result = subprocess.run(
             [sys.executable, "-m", "rpps.metrics.compute_all", "--help"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=30,
+            env=env,
         )
-        assert result.returncode == 0
+        assert result.returncode == 0, (
+            f"CLI exited {result.returncode}; stderr was:\n{result.stderr}"
+        )
         assert "rpps.metrics.compute_all" in result.stdout
         assert "--output" in result.stdout
         assert "--frequency" in result.stdout

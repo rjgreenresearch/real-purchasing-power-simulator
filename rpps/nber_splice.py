@@ -446,7 +446,7 @@ def build_spliced_dataset(
 # ---------------------------------------------------------------------------
 
 def _main() -> None:
-    parser = argparse.ArgumentParser(description="NBER → FRED splice")
+    parser = argparse.ArgumentParser(description="NBER -> FRED splice")
     parser.add_argument("--build-spliced-dataset", action="store_true",
                         help="Build all spliced series and write to data/processed/")
     parser.add_argument("--cache-dir", default=None)

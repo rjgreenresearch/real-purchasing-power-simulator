@@ -22,18 +22,25 @@ make all               # install-dev + lint + typecheck + test
 Direct pytest is also available for finer control:
 
 ```bash
-pytest tests/                              # all tests
-pytest tests/test_counterfactual.py        # one file
-pytest tests/test_counterfactual.py -v     # verbose, one line per test
-pytest -k "bootstrap"                      # name filter; runs anything containing "bootstrap"
-pytest --tb=short                          # short tracebacks (recommended on failure)
-pytest --tb=long --pdb                     # drop into debugger on first failure
-pytest -x                                  # stop at first failure
-pytest --lf                                # rerun only last-failing tests
-pytest --co                                # collect-only (list tests without running)
+python -m pytest tests/                              # all tests
+python -m pytest tests/test_counterfactual.py        # one file
+python -m pytest tests/test_counterfactual.py -v     # verbose, one line per test
+python -m pytest -k "bootstrap"                      # name filter
+python -m pytest --tb=short                          # short tracebacks (recommended on failure)
+python -m pytest --tb=long --pdb                     # drop into debugger on first failure
+python -m pytest -x                                  # stop at first failure
+python -m pytest --lf                                # rerun only last-failing tests
+python -m pytest --co                                # collect-only (list tests without running)
 ```
 
-Expected baseline as of v0.3.2: **267 tests, 0 failed, ~24 s wall-clock**.
+The bare `pytest` command is also fine **if** the install location's
+`Scripts/` (Windows) or `bin/` (Unix) is on PATH. If `pytest` isn't found
+even after `pip install pytest` succeeds, use the `python -m pytest` form
+above — it always works because Python finds its own modules without
+needing PATH to be set up. The Makefile uses `python -m` invocations
+internally so `make test` works regardless.
+
+Expected baseline as of v0.3.3: **267 tests, 0 failed, ~22 s wall-clock**.
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
 suspect is `pip install -e ".[dev]" --break-system-packages` not having been
@@ -322,7 +329,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.3.2 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.3.3 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -330,7 +337,7 @@ Run `make test-cov` to produce a per-module breakdown. The v0.3.2 baseline:
 | `rpps/basket.py`              | 94%      | ✅          |
 | `rpps/breaks.py`              | 92%      | ✅          |
 | `rpps/counterfactual.py`      | 96%      | ✅          |
-| `rpps/fred_loader.py`         | 79%      | ⚠️ Live-FRED HTTP paths uncovered (intentional; see §9.3) |
+| `rpps/fred_loader.py`         | 79%      | ⚠️ Live-FRED HTTP paths uncovered (intentional; see §10.3) |
 | `rpps/metrics/__init__.py`    | 100%     | ✅          |
 | `rpps/metrics/compute_all.py` | 99%      | ✅          |
 | `rpps/metrics/prwdi.py`       | 92%      | ✅          |
@@ -407,9 +414,71 @@ its single-source-of-truth assertion should be: `make all` exits 0.
 
 ---
 
-## 9. Known caveats and open issues
+## 9. Platform notes
 
-### 9.1 Quandt-Andrews p-values are approximate
+The suite is tested on Linux (Ubuntu 24, Python 3.10/3.12), macOS, and
+Windows 11 (Python 3.11). Three Windows-specific gotchas are worth
+flagging:
+
+### 9.1 `pytest` not on PATH
+
+After `pip install pytest` (or `pip install -e ".[dev]"`), the `pytest`
+executable is placed under `C:\Python3xx\Scripts\` (or wherever `pip`
+puts entry points). Windows installers do not always add this directory
+to `PATH`, so `pytest --version` fails even though pytest is installed.
+
+**Fix**: invoke through Python directly:
+```cmd
+python -m pytest tests
+```
+This is what the Makefile uses internally. The same applies to `ruff`,
+`mypy`, and `pip` itself if Scripts/ isn't on PATH.
+
+To put `Scripts/` on PATH permanently, append it to the user PATH
+environment variable via System Properties → Environment Variables, or
+use a virtual environment whose activate script does this for you.
+
+### 9.2 Console codec and Unicode characters
+
+The Windows console default codec is `cp1252`, which cannot encode many
+Unicode characters that appear naturally in academic text (em-dash `—`,
+right arrow `→`, Greek letters `α β λ`, fractions, etc.). When a Python
+program prints such a character to stdout via the default encoding, it
+crashes with `UnicodeEncodeError: 'charmap' codec can't encode character`.
+
+The `rpps` CLI strings are all ASCII-only as of v0.3.3, but defensive
+practice for any new CLI you add is:
+
+1. Use ASCII in `argparse` `description=`, `help=`, and `epilog=` strings.
+2. If you must print Unicode, set `PYTHONIOENCODING=utf-8` in the
+   environment, or pass `encoding="utf-8"` to subprocess calls that
+   capture child output.
+3. Subprocess tests in `rpps` already pass `encoding="utf-8",
+   errors="replace"` and inject `PYTHONIOENCODING=utf-8` into the
+   child's environment. New subprocess tests should follow the same
+   pattern.
+
+### 9.3 `make data` uses POSIX shell syntax
+
+The `make data` target uses a `[ -z "$$FRED_API_KEY" ]` POSIX-shell test
+to error out helpfully when the API key is unset. This works under Git
+Bash, MSYS2, WSL, and Cygwin on Windows, but fails under cmd.exe with
+chocolatey-installed `make.exe`. If you're on bare cmd.exe and need to
+download data, run the underlying commands directly:
+
+```cmd
+set FRED_API_KEY=your_key_here
+python -m rpps.fred_loader --download-all
+python -m rpps.nber_splice --build-spliced-dataset
+```
+
+`make test`, `make lint`, `make typecheck`, and `make all` work fine on
+bare cmd.exe because they don't use shell conditionals.
+
+
+## 10. Known caveats and open issues
+
+### 10.1 Quandt-Andrews p-values are approximate
 
 `rpps.breaks.quandt_andrews_test` uses a Hansen-1997-style approximation
 rather than the full asymptotic distribution from Andrews 1993 Table I.
@@ -420,7 +489,7 @@ documented in the module docstring. This is a methodological caveat, not
 a coverage gap; replacing it requires implementing Hansen 1997's tabulated
 critical values for `(k, π₀)` pairs.
 
-### 9.2 Bootstrap CI tests
+### 10.2 Bootstrap CI tests
 
 The counterfactual bootstrap CI tests use a mix of `n_bootstrap` settings
 (50–1000) chosen for runtime versus precision. The previously-flagged
@@ -431,7 +500,7 @@ that smaller bootstrap counts would introduce. The remaining low-`n_bootstrap`
 tests verify structural properties (zero-noise → tight CI, seed
 reproducibility) where the count doesn't materially affect the assertion.
 
-### 9.3 No tests cover the FRED HTTP path live
+### 10.3 No tests cover the FRED HTTP path live
 
 By design. All FRED-loader tests use mocked `requests.get` responses or
 on-disk fixtures (`data/fixtures/CPIAUCNS_sample.json`). The 79% line
@@ -440,7 +509,7 @@ plumbing and rate-limit handling that requires a live network round-trip
 to exercise. To verify those paths, run `make data` with `FRED_API_KEY`
 set; this is a manual acceptance test, not part of the CI suite.
 
-### 9.4 Phase 4 will introduce new test files
+### 10.4 Phase 4 will introduce new test files
 
 The forthcoming `rpps/cli.py` and `rpps/visualization.py` modules will
 each get their own `tests/test_cli.py` and `tests/test_visualization.py`.
@@ -448,9 +517,19 @@ The visualization tests will assert on figure structure (number of axes,
 axis labels, line counts) rather than on rendered pixels, to keep the
 suite headless and deterministic.
 
-### 9.5 Closed in earlier versions
+### 10.5 Closed in earlier versions
 
 For the historical record:
+
+- **v0.3.3 — Windows portability**. Replaced the Unicode `→` arrow in the
+  `nber_splice` argparse description with ASCII `->` (the `→` crashed the
+  CLI on Windows console hosts whose default codec is cp1252). Hardened
+  both subprocess CLI tests with `encoding="utf-8", errors="replace"` and
+  injected `PYTHONIOENCODING=utf-8` into the child environment so the
+  tests are portable across host codecs. Rewrote the Makefile to invoke
+  Python tools as `python -m <tool>` rather than as bare executables, so
+  `make test`, `make lint`, `make typecheck` work on Windows even when
+  `C:\Python3xx\Scripts\` isn't on PATH.
 
 - **v0.3.2 — `compute_all` orchestration coverage** (was 75%, now 99%).
   Added tests for `_print_summary` formatting (both ok and error rows),
@@ -474,7 +553,7 @@ For the historical record:
 
 ---
 
-## 10. Glossary
+## 11. Glossary
 
 - **DGP** — Data-Generating Process. The synthetic recipe used by a test
   to construct inputs whose properties are known a priori.
@@ -492,4 +571,4 @@ For the historical record:
 
 ---
 
-*Last updated: v0.3.2. Maintained by the `rpps` authors.*
+*Last updated: v0.3.3. Maintained by the `rpps` authors.*

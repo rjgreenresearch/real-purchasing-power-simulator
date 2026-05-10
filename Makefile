@@ -1,7 +1,14 @@
 .PHONY: help install install-dev test test-cov data metrics clean lint typecheck all
 
+# All Python tools are invoked as `python -m <tool>` rather than as bare
+# executables. This works on Windows even when C:\Python3xx\Scripts\ is
+# not on PATH, and on macOS / Linux regardless of which Python install
+# (system, pyenv, conda) provides the interpreter. The `PYTHON` variable
+# can be overridden, e.g. `make test PYTHON=python3.11`.
+PYTHON ?= python
+
 help:
-	@echo "Real Purchasing Power Simulator — Makefile targets"
+	@echo "Real Purchasing Power Simulator - Makefile targets"
 	@echo ""
 	@echo "  make install      install runtime dependencies and the rpps package"
 	@echo "  make install-dev  install runtime + development dependencies"
@@ -15,18 +22,21 @@ help:
 	@echo "  make typecheck    run mypy static type checker"
 	@echo "  make clean        remove caches and processed outputs"
 	@echo "  make all          install-dev + lint + typecheck + test"
+	@echo ""
+	@echo "Override the Python interpreter with PYTHON=...:"
+	@echo "  make test PYTHON=python3.11"
 
 install:
-	pip install -e . --break-system-packages
+	$(PYTHON) -m pip install -e . --break-system-packages
 
 install-dev:
-	pip install -e ".[dev]" --break-system-packages
+	$(PYTHON) -m pip install -e ".[dev]" --break-system-packages
 
 test:
-	pytest tests/
+	$(PYTHON) -m pytest tests/
 
 test-cov:
-	pytest tests/ --cov=rpps --cov-report=term-missing --cov-report=html
+	$(PYTHON) -m pytest tests/ --cov=rpps --cov-report=term-missing --cov-report=html
 
 data:
 	@if [ -z "$$FRED_API_KEY" ]; then \
@@ -34,17 +44,17 @@ data:
 		echo "Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html"; \
 		exit 1; \
 	fi
-	python -m rpps.fred_loader --download-all
-	python -m rpps.nber_splice --build-spliced-dataset
+	$(PYTHON) -m rpps.fred_loader --download-all
+	$(PYTHON) -m rpps.nber_splice --build-spliced-dataset
 
 metrics:
-	python -m rpps.metrics.compute_all --output data/processed
+	$(PYTHON) -m rpps.metrics.compute_all --output data/processed
 
 lint:
-	ruff check rpps/ tests/
+	$(PYTHON) -m ruff check rpps/ tests/
 
 typecheck:
-	mypy rpps/
+	$(PYTHON) -m mypy rpps/
 
 clean:
 	rm -rf data/raw/fred/*.csv data/raw/fred/*.json

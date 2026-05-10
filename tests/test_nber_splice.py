@@ -560,16 +560,27 @@ class TestCLI:
     """Cover lines 440-456 + 460: argparse setup and the __main__ guard."""
 
     def test_module_runs_as_script_with_help(self):
+        import os
         import subprocess
         import sys
 
+        # Force UTF-8 on the child process's stdout/stderr so the test
+        # behaves identically on Windows (cp1252 default), Linux (UTF-8),
+        # and macOS. PYTHONIOENCODING is honored by the Python child even
+        # when the parent terminal codec differs.
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         result = subprocess.run(
             [sys.executable, "-m", "rpps.nber_splice", "--help"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=30,
+            env=env,
         )
-        assert result.returncode == 0
+        assert result.returncode == 0, (
+            f"CLI exited {result.returncode}; stderr was:\n{result.stderr}"
+        )
         assert "--build-spliced-dataset" in result.stdout
         assert "--cache-dir" in result.stdout
 
