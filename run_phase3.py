@@ -10,7 +10,11 @@ in sequence:
   2. rpps.regression   - within-regime OLS with HAC standard errors of
                          delta-log(RPPH^-1) on delta-log(wage), delta-log(CPI),
                          delta-log(productivity), with cross-regime coefficient
-                         tests
+                         tests (H2)
+  2b. rpps.regression  - H3: same panel but with the high_WICR level dummy and
+                         an interaction term (delta-log(wage) * high_WICR);
+                         the interaction coefficient lambda-hat is the H3
+                         test statistic per regime
   3. rpps.counterfactual - 1948-1971 productivity-distribution counterfactual
                          applied to the realized post-1971 productivity path,
                          with bootstrap confidence intervals
@@ -27,6 +31,7 @@ Usage
 -----
     python run_phase3.py                          # uses defaults
     python run_phase3.py --skip-counterfactual    # skip slow step
+    python run_phase3.py --skip-h3                # skip H3 only
     python run_phase3.py --processed-dir custom/  # override I/O dir
     python run_phase3.py --quick                  # faster bootstrap
     python run_phase3.py -v                       # progress logging
@@ -36,7 +41,8 @@ Prerequisites
     make data       (produces data/processed/spliced_wages.csv,
                      data/processed/spliced_productivity.csv)
     make metrics    (produces data/processed/wicr_panel.csv with the CPI YoY
-                     used for break detection input)
+                     used for break detection input AND the high_wicr_run
+                     boolean column required for H3)
 """
 
 from __future__ import annotations
@@ -270,6 +276,173 @@ def step_regression(
 
 
 # ---------------------------------------------------------------------------
+# Step 2b: H3 — sustained-high-WICR threshold test (interaction within regimes)
+# ---------------------------------------------------------------------------
+
+def step_h3(
+    processed_dir: Path,
+    cache_dir: Path | None,
+    regime_assignments: pd.Series,
+) -> dict:
+    """Estimate the §A.1 H3 interaction regression.
+
+    Specification (Appendix A.1, H3):
+        Δlog(RPPH⁻¹)_t = α
+                       + β · Δlog(wage)_t
+                       + γ · Δlog(CPI)_t
+                       + δ · Δlog(productivity)_t
+                       + θ · high_WICR_t
+                       + λ · [Δlog(wage)_t × high_WICR_t]
+                       + ε_t
+
+    H3 test per regime: λ̂ statistically distinguishable from zero. The
+    interaction coefficient λ̂ measures how much the wage-RPPH elasticity
+    differs in sustained-high-WICR sub-periods of the regime relative to the
+    rest of the regime.
+
+    The high_WICR indicator is the `high_wicr_run` column from the WICR
+    metric's output, which flags months where smoothed WICR exceeded 0.80
+    for at least 8 consecutive periods. For the quarterly regression panel
+    we resample monthly→quarterly via `.any()`: a quarter is flagged if
+    *any* month within it was inside a sustained-high-WICR run.
+
+    Within regimes whose dummy has no variation (e.g. Regime 1 = stagflation,
+    where ~every quarter is in a high-WICR run), the interaction column is
+    perfectly collinear with Δlog(wage) and the level dummy is collinear
+    with the constant. fit_by_regime falls back to the OLS pseudoinverse;
+    the resulting coefficients are flagged in the audit log.
+    """
+    logger.info("[H3] Building H3 interaction panel...")
+
+    rpph_by_item = pd.read_csv(
+        processed_dir / "rpph_by_item.csv",
+        index_col=0, parse_dates=True,
+    )
+    if "housing" not in rpph_by_item.columns:
+        raise RuntimeError(
+            "rpph_by_item.csv has no 'housing' column. Re-run `make metrics`."
+        )
+
+    spliced_wages = pd.read_csv(
+        processed_dir / "spliced_wages.csv",
+        index_col=0, parse_dates=True,
+    ).iloc[:, 0]
+
+    wicr_path = processed_dir / "wicr_panel.csv"
+    if not wicr_path.is_file():
+        raise RuntimeError(
+            f"H3 requires {wicr_path}, which is not present. "
+            "Re-run `make metrics` to generate it."
+        )
+    wicr_df = pd.read_csv(wicr_path, index_col=0, parse_dates=True)
+    if "high_wicr_run" not in wicr_df.columns:
+        raise RuntimeError(
+            "wicr_panel.csv has no 'high_wicr_run' column. "
+            "Upgrade rpps and re-run `make metrics`."
+        )
+
+    prod_q = load_series("OPHNFB", cache_dir=cache_dir)
+    cpi = load_series("CPIAUCNS", cache_dir=cache_dir)
+
+    def to_q_yoy(s: pd.Series, name: str) -> pd.Series:
+        return np.log(s.resample("QE").mean()).diff(4).rename(name)
+
+    rpph_inv = 1.0 / rpph_by_item["housing"].dropna()
+
+    # Quarterly high-WICR indicator: True if any month in the quarter was in
+    # a sustained-high-WICR run.
+    high_wicr_q = (
+        wicr_df["high_wicr_run"]
+        .astype(bool)
+        .resample("QE")
+        .max()
+        .astype(int)
+        .rename("high_wicr")
+    )
+
+    df = pd.concat([
+        to_q_yoy(rpph_inv, "dlog_rpph_inv"),
+        to_q_yoy(spliced_wages, "dlog_wage"),
+        to_q_yoy(cpi, "dlog_cpi"),
+        to_q_yoy(prod_q, "dlog_prod"),
+        high_wicr_q,
+    ], axis=1, sort=False).sort_index().dropna()
+
+    # Construct the interaction column AFTER the dropna so it's aligned.
+    df["dlog_wage_x_high_wicr"] = df["dlog_wage"] * df["high_wicr"]
+
+    regimes = regime_assignments.reindex(df.index, method="nearest").astype(int)
+
+    y = df["dlog_rpph_inv"]
+    X = df[["dlog_wage", "dlog_cpi", "dlog_prod", "high_wicr",
+            "dlog_wage_x_high_wicr"]]
+
+    # Per-regime variation diagnostics: warn the user about regimes where
+    # the dummy doesn't vary so they don't misread a NaN coefficient.
+    variation_diag: dict[int, dict] = {}
+    for r in sorted(regimes.unique()):
+        regime_mask = regimes == r
+        n_in_regime = int(regime_mask.sum())
+        n_high = int(df.loc[regime_mask, "high_wicr"].sum())
+        n_low = n_in_regime - n_high
+        variation_diag[int(r)] = {
+            "n_observations": n_in_regime,
+            "n_high_wicr": n_high,
+            "n_low_wicr": n_low,
+            "dummy_varies": (n_high > 0 and n_low > 0),
+        }
+
+    logger.info("    H3 panel sample: n=%d, regimes covered: %s",
+                len(y), sorted(regimes.unique().tolist()))
+    for r, d in variation_diag.items():
+        flag = "OK" if d["dummy_varies"] else "NO VARIATION"
+        logger.info("    regime %d: n=%d (high=%d, low=%d) [%s]",
+                    r, d["n_observations"], d["n_high_wicr"], d["n_low_wicr"], flag)
+
+    logger.info("[H3] Estimating within-regime OLS-HAC with interaction...")
+    t0 = time.time()
+    result = fit_by_regime(
+        y, X, regimes,
+        target_coefficient="dlog_wage_x_high_wicr",
+        min_regime_n=20,
+    )
+    logger.info("    fitted %d regimes (target: dlog_wage_x_high_wicr) in %.1fs",
+                len(result.by_regime), time.time() - t0)
+
+    # Extend the audit with H3-specific information.
+    result.audit["h3_specification"] = (
+        "Δlog(RPPH⁻¹) = α + β·Δlog(wage) + γ·Δlog(CPI) + δ·Δlog(prod) "
+        "+ θ·high_WICR + λ·(Δlog(wage)·high_WICR) + ε"
+    )
+    result.audit["h3_target_coefficient"] = "dlog_wage_x_high_wicr"
+    result.audit["h3_null"] = (
+        "λ̂ (interaction coefficient) not statistically distinguishable from "
+        "zero in any regime"
+    )
+    result.audit["h3_variation_diagnostic"] = variation_diag
+
+    paths = save_regression_result(result, processed_dir, prefix="regression_h3")
+    for kind, p in paths.items():
+        logger.info("    wrote %s -> %s", kind, p)
+
+    # Per-regime summary line: print the interaction coefficient and t-stat.
+    for regime_id, res in sorted(result.by_regime.items()):
+        coefs = res.coefficient_table()
+        if "dlog_wage_x_high_wicr" in coefs.index:
+            row = coefs.loc["dlog_wage_x_high_wicr"]
+            varies = variation_diag.get(regime_id, {}).get("dummy_varies", False)
+            note = "" if varies else " [WARNING: dummy does not vary in regime]"
+            logger.info(
+                "    regime %d: λ̂ = %+.4f (se %.4f, t = %+.2f, p = %.3f, n=%d)%s",
+                regime_id, row["coef"], row["std_err"], row["t_stat"],
+                row["p_value"], res.n_observations, note,
+            )
+
+    return {"result": result, "n_regimes_fitted": len(result.by_regime),
+            "variation_diag": variation_diag}
+
+
+# ---------------------------------------------------------------------------
 # Step 3: Counterfactual
 # ---------------------------------------------------------------------------
 
@@ -352,6 +525,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--skip-regression", action="store_true",
         help="Skip the within-regime regression step.",
+    )
+    parser.add_argument(
+        "--skip-h3", action="store_true",
+        help="Skip the H3 sustained-high-WICR interaction step (Appendix A.1, "
+             "H3). Requires data/processed/wicr_panel.csv with a "
+             "'high_wicr_run' column (produced by `make metrics`).",
     )
     parser.add_argument(
         "--skip-counterfactual", action="store_true",
@@ -446,6 +625,24 @@ def main(argv: list[str] | None = None) -> int:
             return 3
         summary["regression"] = {"n_regimes_fitted": reg["n_regimes_fitted"]}
 
+    # ---- Step 2b: H3 -------------------------------------------------------
+    if args.skip_h3:
+        logger.info("[H3] SKIPPED")
+    else:
+        wicr_csv = processed_dir / "wicr_panel.csv"
+        if not wicr_csv.is_file():
+            logger.warning(
+                "[H3] %s not found; skipping H3 step. Run `make metrics` first.",
+                wicr_csv,
+            )
+        else:
+            try:
+                h3 = step_h3(processed_dir, cache_dir, regime_assignments)
+            except Exception as exc:
+                logger.exception("Step H3 failed: %s", exc)
+                return 5
+            summary["h3"] = {"n_regimes_fitted": h3["n_regimes_fitted"]}
+
     # ---- Step 3: Counterfactual -------------------------------------------
     if args.skip_counterfactual:
         logger.info("[3/3] SKIPPED")
@@ -468,6 +665,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"                  dates: {', '.join(b['break_dates']) or 'none'}")
     if "regression" in summary:
         print(f"  Regression:     {summary['regression']['n_regimes_fitted']} regimes fitted")
+    if "h3" in summary:
+        print(f"  H3 interaction: {summary['h3']['n_regimes_fitted']} regimes fitted")
     if "counterfactual" in summary:
         gap = summary["counterfactual"]["final_pct_gap"]
         print(f"  Counterfactual: final pct gap = {gap:+.1%}")
