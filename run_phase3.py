@@ -128,12 +128,11 @@ def step_breaks(
     min_size = max(2, int(0.10 * n))
     logger.info("    penalty sensitivity (k*log(n)=%.2f, cost=%s):",
                 base_penalty, cost)
-    for scale in (1.0, 0.5, 0.25):
+    for scale in (1.0, 0.5, 0.25, 0.10, 0.05):
         algo = rpt.Pelt(model=cost, min_size=min_size).fit(arr)
         bps = algo.predict(pen=scale * base_penalty)
         n_brk = len(bps) - 1
         if n_brk > 0:
-            dates = [panel.index[i].strftime("%Y-Q%q") for i in bps[:-1]]
             dates_clean = []
             for i in bps[:-1]:
                 ts = panel.index[i]

@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.4.3: **357 tests, 0 failed, ~46 s wall-clock**.
+Expected baseline as of v0.4.4: **357 tests, 0 failed, ~34 s wall-clock**.
 (matplotlib figure rendering pulls the wall-clock up; Phase 1-3 alone runs in ~24s).
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
@@ -330,7 +330,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.4.3 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.4.4 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -535,6 +535,27 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.4.4 - Windows portability fix and broader sensitivity scan**. Two
+  fixes from the v0.4.3 production run on Windows. First: a dead-code
+  `strftime("%Y-Q%q")` line in the break-detection sensitivity scan was
+  failing on Windows (the `%q` directive is a glibc extension not
+  available on Windows' strftime), causing
+  `tests/test_run_phase3.py::TestStepBreaks::test_panel_construction_starts_1947_and_has_four_columns`
+  to fail with `ValueError: Invalid format string`. The fix deletes the
+  dead line; the live formatter (which uses `f"{ts.year}-Q{(ts.month - 1)
+  // 3 + 1}"` and is portable) was already correct. Second: extended the
+  driver's sensitivity scan from scales (1.0, 0.5, 0.25) to (1.0, 0.5,
+  0.25, 0.10, 0.05). The v0.4.3 sensitivity scan only went down to scale
+  0.25, but on the user's actual k=4 panel (with PPI added) scale 0.25
+  produces zero breaks; scale 0.10 is required to detect the canonical
+  1972/1982 regimes. The k=3 reference probe in v0.4.3 had a base
+  penalty of 13.11 (3*log(79)) and scale 0.25 gave penalty 3.28; the k=4
+  driver has base penalty 17.48 (4*log(79)) and scale 0.25 gives 4.37,
+  enough higher to keep PELT from admitting any breaks. Including 0.10
+  and 0.05 in the scan exposes where on the penalty-scale axis breaks
+  actually appear, so the user can pre-commit a single scale for the H1
+  test.
+
 - **v0.4.3 - Break-detection penalty calibration**. The v0.4.2 driver
   reported zero structural breaks on the user's actual FRED-derived panel
   with the default `k * log(n)` penalty (the §5.2 registered specification).
@@ -731,4 +752,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.4.3. Maintained by the `rpps` authors.*
+*Last updated: v0.4.4. Maintained by the `rpps` authors.*
