@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.4.4: **357 tests, 0 failed, ~34 s wall-clock**.
+Expected baseline as of v0.4.5: **357 tests, 0 failed, ~45 s wall-clock**.
 (matplotlib figure rendering pulls the wall-clock up; Phase 1-3 alone runs in ~24s).
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
@@ -330,7 +330,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.4.4 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.4.5 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -534,6 +534,24 @@ suite headless and deterministic.
 ### 10.5 Closed in earlier versions
 
 For the historical record:
+
+- **v0.4.5 - Regression panel quarterly fix**. The v0.4.4 production run on
+  Windows successfully detected 2 canonical breaks at 1972-Q4 and 1982-Q4
+  via `make phase3-permissive`, but the within-regime regression skipped
+  regimes 0 and 1 (n=9 and n=10 respectively, below min_regime_n=20).
+  Diagnosis: the regression panel collapsed to **annual frequency** because
+  the spliced productivity CSV is annual (Kendrick 1925-1957 + OPHNFB year-
+  end resampled). When joined to monthly CPI/wages and resampled to
+  quarterly with `.resample("QE").mean().diff(4).dropna()`, the
+  intra-year-NaN productivity values dragged the entire panel down to year-
+  end frequency: n=62 annual obs spanning 1963-2024 instead of ~244
+  quarterly obs. Fix: the regression now loads OPHNFB directly from FRED
+  (natively quarterly, 312 obs from 1947Q1) instead of reading the
+  spliced productivity CSV. The breaks panel is unchanged (still uses the
+  spliced version for full historical coverage). Result on the user's
+  panel: n=249 quarterly obs, all 3 regimes fitted (n=38, 40, 171),
+  cross-regime tests populate with 3 pairwise comparisons. The H2
+  prediction (regime-dependent wage-RPPH elasticity) is now testable.
 
 - **v0.4.4 - Windows portability fix and broader sensitivity scan**. Two
   fixes from the v0.4.3 production run on Windows. First: a dead-code
@@ -752,4 +770,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.4.4. Maintained by the `rpps` authors.*
+*Last updated: v0.4.5. Maintained by the `rpps` authors.*

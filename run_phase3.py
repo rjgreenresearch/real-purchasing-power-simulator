@@ -205,10 +205,15 @@ def step_regression(
         processed_dir / "spliced_wages.csv",
         index_col=0, parse_dates=True,
     ).iloc[:, 0]
-    spliced_prod = pd.read_csv(
-        processed_dir / "spliced_productivity.csv",
-        index_col=0, parse_dates=True,
-    ).iloc[:, 0]
+    # NOTE: We deliberately load OPHNFB directly here rather than reading the
+    # spliced productivity CSV. The spliced series carries the Kendrick (1961)
+    # historical productivity at *annual* frequency, which is appropriate for
+    # the breaks panel (full 1947+ historical coverage) but collapses the
+    # regression panel to annual when joined to monthly wages and prices via
+    # `.resample("QE").mean().diff(4).dropna()`. The post-1947 regression
+    # only needs the OPHNFB modern leg, which is natively quarterly with 312
+    # observations from 1947Q1, sufficient to populate all detected regimes.
+    prod_q = load_series("OPHNFB", cache_dir=cache_dir)
     cpi = load_series("CPIAUCNS", cache_dir=cache_dir)
 
     # Assemble at quarterly frequency, take YoY log changes.
@@ -221,7 +226,7 @@ def step_regression(
         to_q_yoy(rpph_inv, "dlog_rpph_inv"),
         to_q_yoy(spliced_wages, "dlog_wage"),
         to_q_yoy(cpi, "dlog_cpi"),
-        to_q_yoy(spliced_prod, "dlog_prod"),
+        to_q_yoy(prod_q, "dlog_prod"),
     ], axis=1, sort=False).sort_index().dropna()
 
     # Align regime assignments to df's quarterly index.
