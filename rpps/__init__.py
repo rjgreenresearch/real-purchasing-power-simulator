@@ -17,6 +17,6 @@ Companion paper:
 Apache 2.0 license. https://github.com/rjgreenresearch/real-purchasing-power-simulator
 """
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __author__ = "Robert J. Green"
 __license__ = "Apache-2.0"

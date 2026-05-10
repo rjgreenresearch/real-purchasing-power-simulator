@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.4.0: **313 tests, 0 failed, ~48 s wall-clock**
+Expected baseline as of v0.4.1: **345 tests, 0 failed, ~30 s wall-clock**.
 (matplotlib figure rendering pulls the wall-clock up; Phase 1-3 alone runs in ~24s).
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
@@ -330,7 +330,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.4.0 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.4.1 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -535,6 +535,21 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.4.1 - Narrative layer**. New `rpps/narrative.py` module with
+  data-driven prose generators that pull values from the loaded inputs
+  and weave them into HTML-ready paragraphs tied to the paper's three
+  questions (basket / capture / decoupling) and four hypotheses (H1-H4).
+  The report's executive summary now opens with paper framing instead
+  of a one-line description; each metric section opens with a question-
+  oriented intro that quotes the actual numbers; new "Synthesis" and
+  "What this report does not yet show" sections close the report by
+  tying findings back to the paper's thesis and naming explicitly which
+  Phase 3 hypotheses haven't yet been tested. 32 new tests verify that
+  real input values land in the prose (not just static text), that the
+  prose responds correctly to different data scenarios (rising vs
+  falling RPPH, in/out-of-range PRWDI, single-cluster vs multi-cluster
+  WICR), and that paper-section cross-references are present.
+
 - **v0.4.0 - Phase 4a: HTML reporting**. New `rpps/visualization.py`
   module with matplotlib figure-generation functions (one per metric,
   Tufte-leaning style, headless backend) and new `rpps/report.py` module
@@ -680,4 +695,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.4.0. Maintained by the `rpps` authors.*
+*Last updated: v0.4.1. Maintained by the `rpps` authors.*

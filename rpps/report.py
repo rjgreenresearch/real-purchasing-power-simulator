@@ -37,6 +37,7 @@ from typing import Any
 import pandas as pd
 
 from rpps import __version__ as RPPS_VERSION
+from rpps import narrative
 from rpps import visualization as viz
 
 logger = logging.getLogger(__name__)
@@ -404,12 +405,7 @@ def render_html(inp: ReportInputs) -> str:
 
     # Executive summary
     parts.append("<h2>Executive summary</h2>")
-    parts.append(
-        "<p class='lead'>This report summarizes the spliced data, "
-        "derived welfare metrics, and (when available) regime-structure "
-        "and counterfactual analyses produced by the Real Purchasing Power "
-        "Simulator. All figures and tables are derived from the artifacts "
-        "in <code>data/processed</code> at the time of report generation.</p>")
+    parts.append(narrative.narrative_paper_framing())
 
     metrics = _executive_metrics(inp)
     if metrics:
@@ -427,12 +423,8 @@ def render_html(inp: ReportInputs) -> str:
     # Phase 1: splice
     if "phase1" in inp.available_phases:
         parts.append("<h2>1. Splice (1920-present)</h2>")
-        parts.append(
-            "<p>The wage and productivity series are reconstructed from the "
-            "BLS / FRED post-1939 (post-1947 for productivity) leg and the "
-            "NBER Macrohistory / Kendrick (1961) pre-1939 (pre-1947) leg, "
-            "joined via a multiplicative geometric-mean adjustment computed "
-            "over the overlap window.</p>")
+        parts.append(narrative.narrative_splice(
+            inp.spliced_wages, inp.spliced_productivity, inp.splice_audit))
 
         if inp.spliced_wages is not None:
             parts.append("<h3>Wage splice (manufacturing production workers)</h3>")
@@ -463,13 +455,9 @@ def render_html(inp: ReportInputs) -> str:
         parts.append("<h2>2. Derived welfare metrics</h2>")
 
         if inp.rpph_composite is not None:
-            parts.append("<h3>2.1 Real Purchasing Power Hours (RPPH)</h3>")
-            parts.append(
-                "<p>Hours of labor required at the prevailing manufacturing "
-                "production-worker wage to purchase the fixed reference "
-                "basket. Falling RPPH = rising real purchasing power; rising "
-                "RPPH = falling real purchasing power. The metric is "
-                "denominated in hours, not dollars, deliberately.</p>")
+            parts.append("<h3>2.1 Real Purchasing Power Hours (RPPH) - the basket question</h3>")
+            parts.append(narrative.narrative_rpph(
+                inp.rpph_composite, inp.rpph_by_item, inp.rpph_audit))
             fig = viz.figure_rpph_composite(inp.rpph_composite)
             parts.append(f"<figure>{_img_tag(fig, 'RPPH composite')}"
                          f"<figcaption>Composite basket: total hours of labor.</figcaption></figure>")
@@ -480,28 +468,16 @@ def render_html(inp: ReportInputs) -> str:
                              f"<figcaption>Per-item RPPH on log scale; one line per basket item.</figcaption></figure>")
 
         if inp.wicr_panel is not None:
-            parts.append("<h3>2.2 Wage-Inflation Capture Ratio (WICR)</h3>")
-            parts.append(
-                "<p>WICR = year-over-year inflation / year-over-year wage "
-                "growth. WICR=0 means full nominal-wage gains convert to real "
-                "gains; WICR=1 means real wages flat; WICR>1 means real wages "
-                "declining. The 0.50 and 0.80 thresholds (low/medium/high) "
-                "are pre-registered priors per the Stage 1 working paper "
-                "(MTS Pillar 6, &sect;6.1). Shaded regions mark sustained "
-                "high-WICR runs (smoothed WICR > 0.80 for &ge;8 periods).</p>")
+            parts.append("<h3>2.2 Wage-Inflation Capture Ratio (WICR) - the capture question</h3>")
+            parts.append(narrative.narrative_wicr(inp.wicr_panel, inp.wicr_audit))
             fig = viz.figure_wicr(inp.wicr_panel)
             parts.append(f"<figure>{_img_tag(fig, 'WICR')}"
                          f"<figcaption>Smoothed WICR with regime thresholds and sustained-high shading.</figcaption></figure>")
 
         if inp.prwdi_panel is not None:
-            parts.append("<h3>2.3 Productivity-Real-Wage Decoupling Index (PRWDI)</h3>")
+            parts.append("<h3>2.3 Productivity-Real-Wage Decoupling Index (PRWDI) - the decoupling question</h3>")
+            parts.append(narrative.narrative_prwdi(inp.prwdi_panel, inp.prwdi_audit))
             base = (inp.prwdi_audit or {}).get("base_year", 1947)
-            parts.append(
-                f"<p>PRWDI<sub>t</sub> = (Q<sub>t</sub>/Q<sub>{base}</sub>) "
-                f"/ (C<sub>t</sub>/C<sub>{base}</sub>). PRWDI=1 at the base "
-                f"year by construction. Values above 1 indicate productivity "
-                f"outpacing real compensation (cumulative decoupling); values "
-                f"below 1 indicate the reverse.</p>")
             fig = viz.figure_prwdi(inp.prwdi_panel, base_year=base)
             parts.append(f"<figure>{_img_tag(fig, 'PRWDI')}"
                          f"<figcaption>Top: productivity and compensation indices "
@@ -535,6 +511,20 @@ def render_html(inp: ReportInputs) -> str:
             parts.append(f"<figure>{_img_tag(fig, 'Counterfactual gap')}"
                          f"<figcaption>Actual real compensation versus the "
                          f"reference-window-distribution counterfactual.</figcaption></figure>")
+
+    # Closing synthesis: tie metrics back to the paper's three questions.
+    if "phase2" in inp.available_phases:
+        parts.append("<h2>Synthesis: what the data shows about the paper's questions</h2>")
+        parts.append(narrative.narrative_synthesis(
+            inp.rpph_composite,
+            inp.rpph_by_item,
+            inp.wicr_audit,
+            inp.prwdi_audit,
+            inp.counterfactual_audit,
+        ))
+
+        parts.append("<h2>What this report does not yet show</h2>")
+        parts.append(narrative.narrative_open_questions(inp.available_phases))
 
     # Diagnostics / audit
     parts.append("<h2>Audit and diagnostics</h2>")
