@@ -17,7 +17,6 @@ from rpps.metrics.wicr import (
     save_wicr_result,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -112,13 +111,9 @@ class TestSustainedRuns:
         s = pd.Series([False, True, True, True, False, True, True])
         result = _flag_sustained_runs(s, min_length=3)
         # First run of length 3 flagged; second of length 2 not.
-        assert result.iloc[0] == False
-        assert result.iloc[1] == True
-        assert result.iloc[2] == True
-        assert result.iloc[3] == True
-        assert result.iloc[4] == False
-        assert result.iloc[5] == False
-        assert result.iloc[6] == False
+        expected = [False, True, True, True, False, False, False]
+        for i, want in enumerate(expected):
+            assert bool(result.iloc[i]) is want, f"index {i}: got {result.iloc[i]}, want {want}"
 
     def test_long_run_fully_flagged(self):
         s = pd.Series([True] * 10)
@@ -204,3 +199,91 @@ class TestAuditAndSerialization:
         assert "wicr_yoy" in df.columns
         assert "wicr_smoothed" in df.columns
         assert "regime_label" in df.columns
+
+
+# ---------------------------------------------------------------------------
+# Helper-function edge cases
+# ---------------------------------------------------------------------------
+
+class TestEmptyInputs:
+    """Both empty-input branches should raise. Previously only wages was
+    covered; this closes the cpi_series-empty branch (line 153)."""
+
+    def test_empty_cpi_raises(self):
+        wage = _build_constant_growth_series("1990-01-31", 24, 0.04)
+        cpi = pd.Series([], dtype=float)
+        with pytest.raises(ValueError, match="cpi_series is empty"):
+            compute_wicr(wage, cpi)
+
+
+class TestDatetimeIndexCoercion:
+    """Inputs with a non-DatetimeIndex (e.g. plain int labels representing
+    years) should be coerced internally rather than rejected."""
+
+    def test_non_datetime_index_is_coerced(self):
+        # Build wage and CPI with a string-date index that pandas can parse,
+        # but is not yet a DatetimeIndex. compute_wicr should accept this.
+        n = 60
+        date_strings = pd.date_range("1990-01-31", periods=n, freq="ME").strftime("%Y-%m-%d")
+        wage_values = (1.04 ** (1.0 / 12.0)) ** np.arange(n) * 10.0
+        cpi_values = (1.02 ** (1.0 / 12.0)) ** np.arange(n) * 100.0
+        wage = pd.Series(wage_values, index=pd.Index(list(date_strings)))
+        cpi = pd.Series(cpi_values, index=pd.Index(list(date_strings)))
+        # Should not raise; coercion happens inside _to_datetime_index.
+        result = compute_wicr(wage, cpi)
+        assert result.n_observations > 0
+
+
+class TestFrequencyDetection:
+    """Cover quarterly, annual, and fallback branches of _detect_freq
+    (lines 249-262)."""
+
+    def test_quarterly_data_yoy_lag_is_4(self):
+        # 80 quarterly periods, no irregular spacing.
+        idx = pd.date_range("1990-03-31", periods=80, freq="QE")
+        wage = pd.Series((1.04 ** (1.0 / 4.0)) ** np.arange(80) * 10.0, index=idx)
+        cpi = pd.Series((1.02 ** (1.0 / 4.0)) ** np.arange(80) * 100.0, index=idx)
+        result = compute_wicr(wage, cpi)
+        assert result.audit["yoy_lag_periods"] == 4
+        assert result.audit["target_frequency"] == "Q"
+
+    def test_irregular_spacing_falls_back_to_median_diff(self):
+        # Construct an irregular monthly-ish index (mostly 30-day spacing
+        # with occasional gaps). pd.infer_freq returns None; the fallback
+        # branch counts median day-spacing.
+        from rpps.metrics.wicr import _detect_freq
+
+        base = pd.Timestamp("1990-01-01")
+        # 60 dates spaced ~30 days but with a couple of jitters
+        dates = [base + pd.Timedelta(days=30 * i + (3 if i % 5 == 0 else 0))
+                 for i in range(60)]
+        idx = pd.DatetimeIndex(dates)
+        # Should be classified as monthly (median ~30 days).
+        assert _detect_freq(idx) == "M"
+
+    def test_irregular_quarterly_spacing_falls_back_correctly(self):
+        from rpps.metrics.wicr import _detect_freq
+
+        base = pd.Timestamp("1990-01-01")
+        # 30 dates spaced ~91 days with jitter — quarterly-like.
+        dates = [base + pd.Timedelta(days=91 * i + (i % 7))
+                 for i in range(30)]
+        idx = pd.DatetimeIndex(dates)
+        assert _detect_freq(idx) == "Q"
+
+    def test_irregular_annual_spacing_falls_back_correctly(self):
+        from rpps.metrics.wicr import _detect_freq
+
+        base = pd.Timestamp("1900-01-01")
+        # 50 dates spaced ~365 days with jitter — annual-like.
+        dates = [base + pd.Timedelta(days=365 * i + (i % 4))
+                 for i in range(50)]
+        idx = pd.DatetimeIndex(dates)
+        assert _detect_freq(idx) == "A"
+
+    def test_single_observation_index_defaults_to_monthly(self):
+        from rpps.metrics.wicr import _detect_freq
+
+        idx = pd.DatetimeIndex([pd.Timestamp("2020-01-01")])
+        # With <2 observations, the fallback default is "M".
+        assert _detect_freq(idx) == "M"

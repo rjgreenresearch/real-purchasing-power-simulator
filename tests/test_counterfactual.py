@@ -22,7 +22,6 @@ from rpps.counterfactual import (
     save_counterfactual_result,
 )
 
-
 # ---------------------------------------------------------------------------
 # Synthetic-data helpers
 # ---------------------------------------------------------------------------
@@ -371,19 +370,39 @@ class TestBootstrap:
         # estimate should fall reasonably close to the interval.
         assert lo - 0.05 < result.final_pct_gap < hi + 0.05
 
-    def test_confidence_level_widens_ci(self):
+    def test_confidence_level_widens_ci_monotonically(self):
+        """CI width should be a monotonically increasing function of confidence
+        level. Tests four levels (50%, 80%, 95%, 99%) with the production-default
+        n_bootstrap=1000, which gives stable percentile estimates. Asserting
+        monotonicity rather than pairwise comparison makes this test robust to
+        the percentile-estimate variance that a smaller n_bootstrap would
+        introduce.
+
+        Replaces the previous pairwise (50% vs 99%) comparison flagged in
+        TESTING.md §9.3 as potentially flaky.
+        """
         prod, comp = _build_dgp(
             pre_beta=1.0, post_beta=0.5, noise_sd=0.005, seed=7,
         )
-        narrow = compute_counterfactual(
-            prod, comp, n_bootstrap=200, confidence_level=0.50,
-        )
-        wide = compute_counterfactual(
-            prod, comp, n_bootstrap=200, confidence_level=0.99,
-        )
-        narrow_w = narrow.final_pct_gap_ci[1] - narrow.final_pct_gap_ci[0]
-        wide_w = wide.final_pct_gap_ci[1] - wide.final_pct_gap_ci[0]
-        assert wide_w > narrow_w
+        levels = [0.50, 0.80, 0.95, 0.99]
+        widths = []
+        for level in levels:
+            result = compute_counterfactual(
+                prod, comp,
+                n_bootstrap=1000,
+                random_seed=42,
+                confidence_level=level,
+            )
+            lo, hi = result.final_pct_gap_ci
+            widths.append(hi - lo)
+        # Strictly monotonic increase across all four levels.
+        for w_lo, w_hi, lvl_lo, lvl_hi in zip(
+            widths[:-1], widths[1:], levels[:-1], levels[1:], strict=True,
+        ):
+            assert w_hi > w_lo, (
+                f"width at {lvl_hi:.0%} ({w_hi:.6f}) should exceed width at "
+                f"{lvl_lo:.0%} ({w_lo:.6f})"
+            )
 
 
 # ---------------------------------------------------------------------------

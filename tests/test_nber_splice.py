@@ -7,11 +7,9 @@ import pandas as pd
 import pytest
 
 from rpps.nber_splice import (
-    SpliceResult,
     compute_adjustment_factor,
     splice_series,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -226,7 +224,6 @@ class TestSpliceSeries:
         legacy_idx = pd.date_range("1925-01-01", "1942-12-01", freq="MS")
         legacy = pd.Series(np.linspace(1, 3, len(legacy_idx)), index=legacy_idx)
         # Modern continues the legacy growth at 2x level
-        legacy_at_1939 = legacy.loc["1939-01-01"]
         modern_idx = pd.date_range("1939-01-01", "2020-12-01", freq="MS")
         # modern = 2 * legacy growth path
         legacy_post_1939 = legacy.loc["1939-01-01":].reindex(
@@ -319,3 +316,300 @@ class TestDeterminism:
 
         pd.testing.assert_series_equal(r1.spliced, r2.spliced)
         assert r1.adjustment_factor == r2.adjustment_factor
+
+
+# ---------------------------------------------------------------------------
+# Boundary-continuity edge cases
+# ---------------------------------------------------------------------------
+
+class TestBoundaryContinuityEdgeCases:
+    """Cover lines 289 and 294: empty side of boundary returns True
+    conservatively; zero pre-boundary value is treated as discontinuity."""
+
+    def test_continuity_check_empty_post_returns_true_conservatively(self):
+        # Build a splice where the modern side has no data after the boundary
+        # (everything before the overlap_end). The internal check returns True
+        # to avoid flagging a splice as broken when the data is just absent.
+        from rpps.nber_splice import _check_boundary_continuity
+
+        spliced = pd.Series(
+            [1.0, 1.1, 1.2],
+            index=pd.date_range("1939-01-01", periods=3, freq="MS"),
+        )
+        boundary = pd.Timestamp("1950-01-01")  # well past the data
+        # post-boundary slice is empty; function should return True.
+        assert _check_boundary_continuity(spliced, boundary, tolerance=0.05) is True
+
+    def test_continuity_check_empty_pre_returns_true_conservatively(self):
+        from rpps.nber_splice import _check_boundary_continuity
+
+        spliced = pd.Series(
+            [1.0, 1.1, 1.2],
+            index=pd.date_range("1950-01-01", periods=3, freq="MS"),
+        )
+        boundary = pd.Timestamp("1940-01-01")  # before all data
+        assert _check_boundary_continuity(spliced, boundary, tolerance=0.05) is True
+
+    def test_continuity_check_zero_pre_value_returns_false(self):
+        from rpps.nber_splice import _check_boundary_continuity
+
+        # pre-boundary final value is 0 → function returns False
+        # (cannot compute relative jump; conservatively flag discontinuity).
+        idx = pd.date_range("1939-01-01", periods=4, freq="MS")
+        spliced = pd.Series([1.0, 0.5, 0.0, 1.0], index=idx)
+        boundary = idx[3]
+        assert _check_boundary_continuity(spliced, boundary, tolerance=0.05) is False
+
+
+# ---------------------------------------------------------------------------
+# Kendrick productivity loader
+# ---------------------------------------------------------------------------
+
+class TestKendrickLoader:
+    """Cover lines 345-360: the historical productivity loader. The CSV is
+    committed under data/external/, so this is testable without network."""
+
+    def test_load_kendrick_productivity_returns_series(self):
+        from rpps.nber_splice import load_kendrick_productivity
+
+        series = load_kendrick_productivity()
+        assert isinstance(series, pd.Series)
+        assert isinstance(series.index, pd.DatetimeIndex)
+        assert series.name == "kendrick_productivity"
+        assert len(series) > 0
+
+    def test_load_kendrick_productivity_index_is_year_end(self):
+        from rpps.nber_splice import load_kendrick_productivity
+
+        series = load_kendrick_productivity()
+        # Every date should be Dec 31 of the year.
+        assert (series.index.month == 12).all()
+        assert (series.index.day == 31).all()
+
+    def test_load_kendrick_productivity_covers_overlap_window(self):
+        # The Kendrick file must cover at least 1947-1957 to support the
+        # productivity splice's overlap window.
+        from rpps.nber_splice import load_kendrick_productivity
+
+        series = load_kendrick_productivity()
+        years = series.index.year
+        assert years.min() <= 1947
+        assert years.max() >= 1957
+
+    def test_load_kendrick_raises_on_missing_file(self, tmp_path, monkeypatch):
+        from rpps import nber_splice
+
+        bogus = tmp_path / "nonexistent.csv"
+        monkeypatch.setattr(nber_splice, "PROD_LEGACY_FILE", bogus)
+        with pytest.raises(FileNotFoundError, match="Kendrick"):
+            nber_splice.load_kendrick_productivity()
+
+    def test_load_kendrick_raises_on_bad_columns(self, tmp_path, monkeypatch):
+        from rpps import nber_splice
+
+        # Write a CSV missing the required columns.
+        bad = tmp_path / "bad_kendrick.csv"
+        bad.write_text("foo,bar\n1947,100.0\n1948,103.0\n")
+        monkeypatch.setattr(nber_splice, "PROD_LEGACY_FILE", bad)
+        with pytest.raises(ValueError, match="must have columns"):
+            nber_splice.load_kendrick_productivity()
+
+
+# ---------------------------------------------------------------------------
+# Splice builders (monkeypatched FRED)
+# ---------------------------------------------------------------------------
+
+def _synthetic_ahetpi() -> pd.Series:
+    idx = pd.date_range("1939-01-01", "2020-12-01", freq="MS")
+    values = np.linspace(0.50, 30.0, len(idx))
+    return pd.Series(values, index=idx, name="AHETPI")
+
+
+def _synthetic_m0844() -> pd.Series:
+    idx = pd.date_range("1925-01-01", "1942-12-01", freq="MS")
+    values = np.linspace(0.20, 0.80, len(idx))
+    return pd.Series(values, index=idx, name="M0844AUSM052NNBR")
+
+
+def _synthetic_ophnfb() -> pd.Series:
+    idx = pd.date_range("1947-03-31", "2020-12-31", freq="QE")
+    values = np.linspace(20.0, 110.0, len(idx))
+    return pd.Series(values, index=idx, name="OPHNFB")
+
+
+class TestBuildWageSplice:
+    """Cover lines 311-312, 320-332: the wage-splice builder."""
+
+    def test_build_wage_splice_returns_splice_result(self, monkeypatch):
+        from rpps import nber_splice
+        from rpps.nber_splice import SpliceResult
+
+        def fake_load_series(series_id, *args, **kwargs):
+            if series_id == nber_splice.WAGE_LEGACY_SERIES:
+                return _synthetic_m0844()
+            if series_id == nber_splice.WAGE_MODERN_SERIES:
+                return _synthetic_ahetpi()
+            raise KeyError(series_id)
+
+        monkeypatch.setattr(nber_splice, "load_series", fake_load_series)
+        result = nber_splice.build_wage_splice()
+        assert isinstance(result, SpliceResult)
+        assert result.spliced.index.min().year <= 1925
+        assert result.spliced.index.max().year >= 2020
+
+    def test_load_spliced_wages_returns_series(self, monkeypatch):
+        from rpps import nber_splice
+
+        def fake_load_series(series_id, *args, **kwargs):
+            if series_id == nber_splice.WAGE_LEGACY_SERIES:
+                return _synthetic_m0844()
+            if series_id == nber_splice.WAGE_MODERN_SERIES:
+                return _synthetic_ahetpi()
+            raise KeyError(series_id)
+
+        monkeypatch.setattr(nber_splice, "load_series", fake_load_series)
+        series = nber_splice.load_spliced_wages()
+        assert isinstance(series, pd.Series)
+        assert len(series) > 100
+
+
+class TestBuildProductivitySplice:
+    """Cover lines 368-377: the productivity-splice builder."""
+
+    def test_build_productivity_splice_resamples_to_annual(self, monkeypatch):
+        from rpps import nber_splice
+        from rpps.nber_splice import SpliceResult
+
+        def fake_load_series(series_id, *args, **kwargs):
+            if series_id == nber_splice.PROD_MODERN_SERIES:
+                return _synthetic_ophnfb()
+            raise KeyError(series_id)
+
+        monkeypatch.setattr(nber_splice, "load_series", fake_load_series)
+        result = nber_splice.build_productivity_splice()
+        assert isinstance(result, SpliceResult)
+        # The spliced series is annual: every step should be ≥ 360 days.
+        diffs = pd.Series(result.spliced.index).diff().dropna()
+        assert diffs.dt.days.min() >= 360
+
+
+# ---------------------------------------------------------------------------
+# Spliced-dataset orchestrator
+# ---------------------------------------------------------------------------
+
+class TestBuildSplicedDataset:
+    """Cover lines 398-432: the build_spliced_dataset orchestrator."""
+
+    def test_build_spliced_dataset_writes_csvs_and_audit(
+        self, tmp_path, monkeypatch,
+    ):
+        from rpps import nber_splice
+
+        def fake_load_series(series_id, *args, **kwargs):
+            if series_id == nber_splice.WAGE_LEGACY_SERIES:
+                return _synthetic_m0844()
+            if series_id == nber_splice.WAGE_MODERN_SERIES:
+                return _synthetic_ahetpi()
+            if series_id == nber_splice.PROD_MODERN_SERIES:
+                return _synthetic_ophnfb()
+            raise KeyError(series_id)
+
+        monkeypatch.setattr(nber_splice, "load_series", fake_load_series)
+        audit = nber_splice.build_spliced_dataset(output_dir=tmp_path)
+
+        assert (tmp_path / "spliced_wages.csv").exists()
+        assert (tmp_path / "spliced_productivity.csv").exists()
+        assert (tmp_path / "splice_audit.json").exists()
+        assert "wages" in audit["splices"]
+        assert "productivity" in audit["splices"]
+
+    def test_build_spliced_dataset_handles_missing_kendrick_gracefully(
+        self, tmp_path, monkeypatch,
+    ):
+        from rpps import nber_splice
+
+        # Patch load_series to give wages, but force Kendrick file missing.
+        def fake_load_series(series_id, *args, **kwargs):
+            if series_id == nber_splice.WAGE_LEGACY_SERIES:
+                return _synthetic_m0844()
+            if series_id == nber_splice.WAGE_MODERN_SERIES:
+                return _synthetic_ahetpi()
+            if series_id == nber_splice.PROD_MODERN_SERIES:
+                return _synthetic_ophnfb()
+            raise KeyError(series_id)
+
+        monkeypatch.setattr(nber_splice, "load_series", fake_load_series)
+        # Force the Kendrick file to be missing so productivity splice fails.
+        monkeypatch.setattr(
+            nber_splice, "PROD_LEGACY_FILE", tmp_path / "nonexistent.csv",
+        )
+
+        audit = nber_splice.build_spliced_dataset(output_dir=tmp_path)
+        # Wage splice still produced an output.
+        assert (tmp_path / "spliced_wages.csv").exists()
+        # Productivity splice was recorded as skipped, not crashed.
+        prod_status = audit["splices"]["productivity"]
+        assert prod_status.get("status") == "skipped"
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+class TestCLI:
+    """Cover lines 440-456 + 460: argparse setup and the __main__ guard."""
+
+    def test_module_runs_as_script_with_help(self):
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, "-m", "rpps.nber_splice", "--help"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0
+        assert "--build-spliced-dataset" in result.stdout
+        assert "--cache-dir" in result.stdout
+
+    def test_main_no_action_is_noop(self, monkeypatch, capsys):
+        # Calling _main with no flags should not invoke build_spliced_dataset.
+        from rpps import nber_splice
+
+        sentinel = {"called": False}
+
+        def should_not_be_called(*args, **kwargs):
+            sentinel["called"] = True
+
+        monkeypatch.setattr(
+            nber_splice, "build_spliced_dataset", should_not_be_called,
+        )
+        monkeypatch.setattr("sys.argv", ["rpps.nber_splice"])
+        nber_splice._main()
+        assert sentinel["called"] is False
+
+    def test_main_with_build_flag_invokes_build(
+        self, tmp_path, monkeypatch, capsys,
+    ):
+        from rpps import nber_splice
+
+        captured: dict = {}
+
+        def fake_build(cache_dir=None, output_dir=None):
+            captured["cache_dir"] = cache_dir
+            captured["output_dir"] = output_dir
+            return {"splices": {"wages": {"status": "ok"}}}
+
+        monkeypatch.setattr(nber_splice, "build_spliced_dataset", fake_build)
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "rpps.nber_splice",
+                "--build-spliced-dataset",
+                "--output-dir", str(tmp_path),
+                "-vv",
+            ],
+        )
+        nber_splice._main()
+        assert captured["output_dir"] == str(tmp_path)

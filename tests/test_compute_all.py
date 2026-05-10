@@ -16,7 +16,6 @@ import pytest
 
 from rpps.metrics import compute_all
 
-
 # ---------------------------------------------------------------------------
 # Synthetic data builders
 # ---------------------------------------------------------------------------
@@ -244,3 +243,140 @@ class TestCLI:
 
         rc = compute_all.main(["--output", str(tmp_path), "--quiet"])
         assert rc != 0
+
+
+# ---------------------------------------------------------------------------
+# Print-summary formatting
+# ---------------------------------------------------------------------------
+
+class TestPrintSummary:
+    """Cover the human-readable summary emitter (lines 182-204)."""
+
+    def test_main_without_quiet_prints_human_readable_summary(
+        self, tmp_path: Path, patched_run, capsys,
+    ):
+        rc = compute_all.main(["--output", str(tmp_path)])
+        captured = capsys.readouterr()
+        assert rc == 0
+        # Header banner appears.
+        assert "rpps.metrics.compute_all" in captured.out
+        # Each metric's status row appears.
+        for tag in ("RPPH", "WICR", "PRWDI"):
+            assert tag in captured.out
+        # OK rows include observation counts.
+        assert "obs" in captured.out
+        # Footer with run-summary path.
+        assert "Run summary:" in captured.out
+
+    def test_print_summary_renders_error_rows(
+        self, tmp_path: Path, monkeypatch, capsys,
+    ):
+        # Inject a single-metric failure and verify the ERROR row prints
+        # the error message, not "obs".
+        def fake_load_series(series_id: str, *args, **kwargs):
+            if series_id == "CPIAUCNS":
+                raise RuntimeError("simulated outage")
+            if series_id == "OPHNFB":
+                return _synthetic_productivity()
+            if series_id == "COMPRNFB":
+                return _synthetic_real_compensation()
+            raise KeyError(series_id)
+
+        monkeypatch.setattr(
+            "rpps.metrics.compute_all.load_series", fake_load_series,
+        )
+        monkeypatch.setattr(
+            "rpps.metrics.compute_all.load_spliced_wages",
+            lambda *a, **kw: _synthetic_wages(),
+        )
+        monkeypatch.setattr(
+            "rpps.metrics.compute_all.basket_cost_panel",
+            lambda *a, **kw: _synthetic_basket_panel(),
+        )
+
+        rc = compute_all.main(["--output", str(tmp_path)])
+        captured = capsys.readouterr()
+        # Failure → nonzero exit.
+        assert rc != 0
+        # ERROR appears for the failing metric.
+        assert "ERROR" in captured.out
+        # OK appears for the surviving metrics.
+        assert "OK" in captured.out
+        # The propagated error string is shown.
+        assert "simulated outage" in captured.out
+
+    def test_print_summary_handles_missing_coverage_dates(
+        self, tmp_path: Path, capsys,
+    ):
+        # Synthesize a summary dict that has 'ok' rows but no coverage dates,
+        # exercising the conditional branch in _print_summary.
+        summary = {
+            "output_dir": str(tmp_path),
+            "frequency": "M",
+            "base_year": 1947,
+            "results": [
+                {"metric": "RPPH", "status": "ok", "n_observations": 100},
+                {"metric": "WICR", "status": "error", "error": "boom"},
+            ],
+            "run_summary_path": str(tmp_path / "summary.json"),
+        }
+        compute_all._print_summary(summary)
+        captured = capsys.readouterr()
+        # "obs" still printed even without coverage dates.
+        assert "100 obs" in captured.out
+        # Error message rendered for the failing row.
+        assert "boom" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# Run-summary version tracking
+# ---------------------------------------------------------------------------
+
+class TestVersionTracking:
+    """Verify the run summary records the actual installed package version
+    rather than a hardcoded literal (regression for the 0.3.0 → 0.3.1 bug)."""
+
+    def test_summary_records_current_package_version(
+        self, tmp_path: Path, patched_run,
+    ):
+        from rpps import __version__ as expected
+        summary = compute_all.run(output_dir=tmp_path)
+        assert summary["rpps_version"] == expected
+
+    def test_version_persisted_to_disk(
+        self, tmp_path: Path, patched_run,
+    ):
+        from rpps import __version__ as expected
+        compute_all.run(output_dir=tmp_path)
+        with open(tmp_path / "metrics_run_summary.json") as fh:
+            on_disk = json.load(fh)
+        assert on_disk["rpps_version"] == expected
+
+
+# ---------------------------------------------------------------------------
+# Module-as-script entry point
+# ---------------------------------------------------------------------------
+
+class TestModuleEntryPoint:
+    """The `if __name__ == "__main__"` guard is exercised by running the
+    module as a script in a subprocess. We can't cover this line in-process
+    (coverage.py considers it dead from `import` paths), but we can verify
+    the script invocation works."""
+
+    def test_module_runs_as_script(self, tmp_path: Path):
+        import subprocess
+        import sys
+
+        # Run with --help to avoid needing any data; still exercises argparse.
+        result = subprocess.run(
+            [sys.executable, "-m", "rpps.metrics.compute_all", "--help"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0
+        assert "rpps.metrics.compute_all" in result.stdout
+        assert "--output" in result.stdout
+        assert "--frequency" in result.stdout
+        assert "--base-year" in result.stdout
+        assert "--quiet" in result.stdout

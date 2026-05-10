@@ -42,7 +42,7 @@ Phase 1 (data foundation), Phase 2 (derived metrics), and Phase 3 (analysis laye
 # Install
 make install
 
-# Run the test suite (offline, uses fixture data)
+# Run the test suite (offline, uses fixture data; see TESTING.md for the full playbook)
 make test
 
 # Get a free FRED API key:  https://fred.stlouisfed.org/docs/api/api_key.html
@@ -120,6 +120,7 @@ real-purchasing-power-simulator/
 ├── CITATION.cff
 ├── SPECIFICATION.md                # Maps each module to a section of the working paper
 ├── DATA_ACQUISITION.md             # FRED + NBER series catalog with download instructions
+├── TESTING.md                      # Test procedure, conventions, debugging playbook
 ├── pyproject.toml
 ├── requirements.txt
 ├── Makefile

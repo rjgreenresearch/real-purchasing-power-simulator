@@ -344,7 +344,7 @@ def _assign_regime_labels(
     """Assign integer regime label 0..n_regimes-1 to each observation."""
     labels = np.zeros(n, dtype=int)
     boundaries = [0] + list(breakpoints) + [n]
-    for r, (s, e) in enumerate(zip(boundaries[:-1], boundaries[1:])):
+    for r, (s, e) in enumerate(zip(boundaries[:-1], boundaries[1:], strict=True)):
         labels[s:e] = r
     return pd.Series(labels, index=idx, name="regime")
 

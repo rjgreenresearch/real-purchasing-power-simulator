@@ -9,6 +9,13 @@ Implements the three derived metrics specified in §5.1 of:
     prwdi  :  Productivity-Real-Wage Decoupling Index
 """
 
+from rpps.metrics.compute_all import run as compute_all_metrics
+from rpps.metrics.prwdi import (
+    DEFAULT_BASE_YEAR,
+    PrwdiResult,
+    compute_prwdi,
+    save_prwdi_result,
+)
 from rpps.metrics.rpph import (
     RpphResult,
     compute_rpph,
@@ -22,13 +29,6 @@ from rpps.metrics.wicr import (
     compute_wicr,
     save_wicr_result,
 )
-from rpps.metrics.prwdi import (
-    DEFAULT_BASE_YEAR,
-    PrwdiResult,
-    compute_prwdi,
-    save_prwdi_result,
-)
-from rpps.metrics.compute_all import run as compute_all_metrics
 
 __all__ = [
     "RpphResult",

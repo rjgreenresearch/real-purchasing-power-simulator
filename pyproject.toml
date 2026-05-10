@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rpps"
-version = "0.3.0"
+version = "0.3.2"
 description = "Real Purchasing Power Simulator — MTS Pillar 6 (Welfare Measurement Architecture)"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -72,3 +72,16 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+# Third-party scientific libraries (pandas, scipy, statsmodels, ruptures,
+# requests, matplotlib) do not ship complete type stubs by default. We
+# accept untyped imports rather than make `make typecheck` brittle to
+# whatever stub packages happen to be installed in the dev environment.
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = false

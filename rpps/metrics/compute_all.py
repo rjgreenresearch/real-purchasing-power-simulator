@@ -39,8 +39,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
-
+from rpps import __version__ as RPPS_VERSION
 from rpps.basket import basket_cost_panel
 from rpps.fred_loader import load_series
 from rpps.metrics.prwdi import compute_prwdi, save_prwdi_result
@@ -152,7 +151,7 @@ def run(
     out.mkdir(parents=True, exist_ok=True)
 
     summary: dict[str, Any] = {
-        "rpps_version": "0.2.0",
+        "rpps_version": RPPS_VERSION,
         "started_at_utc": datetime.now(timezone.utc).isoformat(),
         "output_dir": str(out.resolve()),
         "frequency": frequency,

@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from rpps.fred_loader import load_series, REPO_ROOT
+from rpps.fred_loader import REPO_ROOT, load_series
 
 logger = logging.getLogger(__name__)
 

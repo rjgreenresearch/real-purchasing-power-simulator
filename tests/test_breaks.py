@@ -15,7 +15,6 @@ from rpps.breaks import (
     save_break_result,
 )
 
-
 RNG = np.random.default_rng(20260508)
 
 

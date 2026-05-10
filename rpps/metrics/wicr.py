@@ -242,6 +242,19 @@ def _to_datetime_index(s: pd.Series) -> pd.Series:
 
 def _detect_freq(idx: pd.DatetimeIndex) -> str:
     """Return 'M' for monthly-like, 'Q' for quarterly-like, 'A' for annual-like."""
+    # pd.infer_freq raises ValueError on indices with fewer than 3 dates,
+    # so handle small indices before attempting inference.
+    if len(idx) < 3:
+        if len(idx) < 2:
+            return "M"
+        diffs = pd.Series(idx).diff().dropna()
+        median_days = diffs.dt.days.median()
+        if median_days <= 35:
+            return "M"
+        if median_days <= 100:
+            return "Q"
+        return "A"
+
     inferred = pd.infer_freq(idx) or ""
     inferred_upper = inferred.upper() if inferred else ""
     if inferred_upper.startswith(("M", "MS")) or "M" in inferred_upper[:2]:
@@ -251,8 +264,6 @@ def _detect_freq(idx: pd.DatetimeIndex) -> str:
     if inferred_upper.startswith(("A", "Y", "AS", "YS")):
         return "A"
     # Fallback: use median spacing.
-    if len(idx) < 2:
-        return "M"
     diffs = pd.Series(idx).diff().dropna()
     median_days = diffs.dt.days.median()
     if median_days <= 35:

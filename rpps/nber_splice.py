@@ -41,14 +41,14 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from rpps.fred_loader import DEFAULT_PROCESSED_DIR, load_series, REPO_ROOT
+from rpps.fred_loader import DEFAULT_PROCESSED_DIR, REPO_ROOT, load_series
 
 logger = logging.getLogger(__name__)
 
@@ -390,6 +390,16 @@ def build_productivity_splice(
 # Build / persist
 # ---------------------------------------------------------------------------
 
+def _audit_path_str(p: Path) -> str:
+    """Render a path for the audit record. Prefer a path relative to the
+    repo root when possible, but fall back to the absolute path when the
+    target is outside the repo (e.g. a user's tmp dir or external output)."""
+    try:
+        return str(p.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(p.resolve())
+
+
 def build_spliced_dataset(
     cache_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
@@ -409,7 +419,7 @@ def build_spliced_dataset(
     wage_path = output_dir / "spliced_wages.csv"
     wage.spliced.to_csv(wage_path, header=True)
     audit["splices"]["wages"] = wage.to_dict()
-    audit["splices"]["wages"]["output_path"] = str(wage_path.relative_to(REPO_ROOT))
+    audit["splices"]["wages"]["output_path"] = _audit_path_str(wage_path)
 
     # Productivity splice
     logger.info("Building productivity splice")
@@ -418,8 +428,7 @@ def build_spliced_dataset(
         prod_path = output_dir / "spliced_productivity.csv"
         prod.spliced.to_csv(prod_path, header=True)
         audit["splices"]["productivity"] = prod.to_dict()
-        audit["splices"]["productivity"]["output_path"] = str(
-            prod_path.relative_to(REPO_ROOT))
+        audit["splices"]["productivity"]["output_path"] = _audit_path_str(prod_path)
     except FileNotFoundError as exc:
         logger.warning("Productivity splice skipped: %s", exc)
         audit["splices"]["productivity"] = {"status": "skipped", "reason": str(exc)}

@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
 
 from rpps.fred_loader import (
-    BatchResult,
     CATEGORIES,
     FRED_SERIES,
-    FredSeries,
+    BatchResult,
     _parse_observations,
     _read_cached_series,
     _sha256_file,

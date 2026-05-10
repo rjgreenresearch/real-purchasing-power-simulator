@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -20,7 +18,6 @@ from rpps.basket import (
     load_kff_healthcare,
     load_nces_tuition,
 )
-
 
 # ---------------------------------------------------------------------------
 # Catalog integrity
