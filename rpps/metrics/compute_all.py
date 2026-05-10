@@ -181,7 +181,7 @@ def run(
 
 def _print_summary(summary: dict[str, Any]) -> None:
     print("=" * 72)
-    print("rpps.metrics.compute_all — Phase 2 batch run")
+    print("rpps.metrics.compute_all - Phase 2 batch run")
     print("=" * 72)
     print(f"Output directory:  {summary['output_dir']}")
     print(f"Frequency:         {summary['frequency']}")

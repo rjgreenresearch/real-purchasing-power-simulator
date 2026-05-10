@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.3.3: **267 tests, 0 failed, ~22 s wall-clock**.
+Expected baseline as of v0.3.4: **270 tests, 0 failed, ~22 s wall-clock**.
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
 suspect is `pip install -e ".[dev]" --break-system-packages` not having been
@@ -329,7 +329,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.3.3 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.3.4 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -458,22 +458,35 @@ practice for any new CLI you add is:
    child's environment. New subprocess tests should follow the same
    pattern.
 
-### 9.3 `make data` uses POSIX shell syntax
+### 9.3 `make data` and the FRED API key
 
-The `make data` target uses a `[ -z "$$FRED_API_KEY" ]` POSIX-shell test
-to error out helpfully when the API key is unset. This works under Git
-Bash, MSYS2, WSL, and Cygwin on Windows, but fails under cmd.exe with
-chocolatey-installed `make.exe`. If you're on bare cmd.exe and need to
-download data, run the underlying commands directly:
+The `make data` target downloads FRED + NBER data and builds the spliced
+dataset. It requires the `FRED_API_KEY` environment variable to be set
+(get a free key at <https://fred.stlouisfed.org/docs/api/api_key.html>).
 
-```cmd
-set FRED_API_KEY=your_key_here
-python -m rpps.fred_loader --download-all
-python -m rpps.nber_splice --build-spliced-dataset
-```
+**Setting the key** (any one of these works):
 
-`make test`, `make lint`, `make typecheck`, and `make all` work fine on
-bare cmd.exe because they don't use shell conditionals.
+- macOS / Linux / Git Bash:
+  ```bash
+  export FRED_API_KEY=your_key_here
+  make data
+  ```
+- Windows cmd.exe:
+  ```cmd
+  set FRED_API_KEY=your_key_here
+  make data
+  ```
+- Windows PowerShell:
+  ```powershell
+  $env:FRED_API_KEY = "your_key_here"
+  make data
+  ```
+
+If `FRED_API_KEY` is unset, the FRED loader prints a one-line error and
+exits 1, halting `make data` before the splice step. There is no shell
+conditional in the Makefile, so this works identically across cmd.exe,
+PowerShell, bash, zsh, and MSYS — any environment in which `make` itself
+runs.
 
 
 ## 10. Known caveats and open issues
@@ -520,6 +533,21 @@ suite headless and deterministic.
 ### 10.5 Closed in earlier versions
 
 For the historical record:
+
+- **v0.3.4 — `make data` portability + FRED CLI UX**. Replaced the
+  `[ -z "$$FRED_API_KEY" ]` POSIX-shell precheck in the Makefile with
+  delegation to the FRED loader's own startup check, so `make data`
+  works under bare cmd.exe (the previous version exited with
+  `-z was unexpected at this time`). Added a top-level RuntimeError
+  handler in `rpps.fred_loader._main` that prints a clean one-line
+  error and exits 1 when `FRED_API_KEY` is missing, instead of dumping
+  a Python traceback. Audited and fixed two more Unicode-stdout bugs
+  (em-dash in `compute_all._print_summary` header, right-arrow in
+  `fred_loader --download` summary line) plus one Unicode-logging bug
+  (`±` in `prwdi.compute_prwdi` warning). Added three regression tests
+  exercising the missing-API-key CLI paths (`--download-all`,
+  `--download SERIES`, and the `--catalog` happy path that doesn't
+  need a key).
 
 - **v0.3.3 — Windows portability**. Replaced the Unicode `→` arrow in the
   `nber_splice` argparse description with ASCII `->` (the `→` crashed the
@@ -571,4 +599,4 @@ For the historical record:
 
 ---
 
-*Last updated: v0.3.3. Maintained by the `rpps` authors.*
+*Last updated: v0.3.4. Maintained by the `rpps` authors.*

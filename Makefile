@@ -39,11 +39,6 @@ test-cov:
 	$(PYTHON) -m pytest tests/ --cov=rpps --cov-report=term-missing --cov-report=html
 
 data:
-	@if [ -z "$$FRED_API_KEY" ]; then \
-		echo "ERROR: FRED_API_KEY is not set."; \
-		echo "Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html"; \
-		exit 1; \
-	fi
 	$(PYTHON) -m rpps.fred_loader --download-all
 	$(PYTHON) -m rpps.nber_splice --build-spliced-dataset
 

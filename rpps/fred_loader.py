@@ -25,6 +25,7 @@ import hashlib
 import json
 import logging
 import os
+import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -554,13 +555,26 @@ def _main() -> None:
     level = (logging.WARNING, logging.INFO, logging.DEBUG)[min(args.verbose, 2)]
     logging.basicConfig(level=level, format="%(levelname)s %(name)s: %(message)s")
 
+    # Reject early if any download path was requested but FRED_API_KEY is unset.
+    # Catching the RuntimeError here gives a clean one-line error instead of a
+    # full traceback, which is the right UX for a CLI invoked from `make data`.
+    if args.download or args.download_all:
+        try:
+            get_api_key(None)
+        except RuntimeError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+
     if args.catalog:
         print(catalog_summary().to_string(index=False))
         return
 
     if args.download:
         s = download_series(args.download, cache_dir=args.cache_dir, force=args.force)
-        print(f"{args.download}: {len(s)} obs, {s.index.min().date()} → {s.index.max().date()}")
+        print(
+            f"{args.download}: {len(s)} obs, "
+            f"{s.index.min().date()} to {s.index.max().date()}"
+        )
         return
 
     if args.download_all:

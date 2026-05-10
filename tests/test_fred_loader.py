@@ -365,3 +365,84 @@ class TestManifest:
         assert m["n_series_cached"] == 1
         assert m["series"]["CPIAUCNS"]["count"] == 6
         assert m["series"]["AHETPI"]["status"] == "uncached"
+
+
+# ---------------------------------------------------------------------------
+# CLI: missing-API-key path
+# ---------------------------------------------------------------------------
+
+class TestCLIMissingApiKey:
+    """When FRED_API_KEY is unset and a download is requested, the CLI must
+    exit nonzero with a clean one-line error rather than a Python traceback.
+    Regression test for the v0.3.4 UX fix.
+    """
+
+    def test_download_all_without_api_key_exits_cleanly(self, tmp_path):
+        import os
+        import subprocess
+        import sys
+
+        # Strip FRED_API_KEY from the child env, then force UTF-8 for portability.
+        env = {k: v for k, v in os.environ.items() if k != "FRED_API_KEY"}
+        env["PYTHONIOENCODING"] = "utf-8"
+        result = subprocess.run(
+            [sys.executable, "-m", "rpps.fred_loader", "--download-all"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            env=env,
+        )
+        # Nonzero exit.
+        assert result.returncode != 0
+        # Clean ERROR: line on stderr, not a traceback.
+        assert "ERROR:" in result.stderr
+        assert "FRED_API_KEY" in result.stderr
+        # No traceback noise.
+        assert "Traceback" not in result.stderr
+
+    def test_download_single_without_api_key_exits_cleanly(self, tmp_path):
+        import os
+        import subprocess
+        import sys
+
+        env = {k: v for k, v in os.environ.items() if k != "FRED_API_KEY"}
+        env["PYTHONIOENCODING"] = "utf-8"
+        result = subprocess.run(
+            [sys.executable, "-m", "rpps.fred_loader", "--download", "CPIAUCNS"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            env=env,
+        )
+        assert result.returncode != 0
+        assert "ERROR:" in result.stderr
+        assert "FRED_API_KEY" in result.stderr
+        assert "Traceback" not in result.stderr
+
+    def test_catalog_works_without_api_key(self):
+        """`--catalog` doesn't need FRED_API_KEY since it just lists what
+        the package knows about. It must succeed even with no key set."""
+        import os
+        import subprocess
+        import sys
+
+        env = {k: v for k, v in os.environ.items() if k != "FRED_API_KEY"}
+        env["PYTHONIOENCODING"] = "utf-8"
+        result = subprocess.run(
+            [sys.executable, "-m", "rpps.fred_loader", "--catalog"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            env=env,
+        )
+        assert result.returncode == 0, (
+            f"Stderr: {result.stderr}"
+        )
+        # Catalog output should mention some known series id.
+        assert "CPIAUCNS" in result.stdout

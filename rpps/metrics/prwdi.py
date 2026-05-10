@@ -228,7 +228,7 @@ def _base_value(series: pd.Series, base_year: int) -> float | None:
     nearby = series[(series.index.year >= base_year - 1) & (series.index.year <= base_year + 1)]
     if not nearby.empty:
         logger.warning(
-            "Base year %d not found exactly; using %d±1 window mean.",
+            "Base year %d not found exactly; using %d +/- 1 window mean.",
             base_year,
             base_year,
         )
