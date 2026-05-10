@@ -65,12 +65,31 @@ logger = logging.getLogger("phase3")
 def step_breaks(
     processed_dir: Path,
     cache_dir: Path | None,
+    penalty_scale: float = 1.0,
+    cost: str = "rbf",
 ) -> dict:
     """Build the multivariate panel and run break detection.
 
     Panel: quarterly YoY-growth rates for CPI, PPI, productivity, and wages,
     1947Q1-present. The 1947 start matches §6.1's H1 specification.
+
+    Parameters
+    ----------
+    penalty_scale : float, default 1.0
+        Multiplier on the default BIC-style penalty `k * log(n)`. The default
+        (1.0) is the registered Stage 1 specification per §5.2. Smaller values
+        admit more breaks; larger values are more conservative. As a sensitivity
+        check, this driver also reports the number of breaks at scales 0.5 and
+        0.25; values around 0.25 typically detect the canonical 1972 (Bretton
+        Woods) and 1982 (Volcker) regime transitions on this data scale.
+    cost : str, default "rbf"
+        ruptures cost function. "rbf" is non-parametric (default). "l2" is
+        sum-of-squared-deviations from segment means.
     """
+    import math
+
+    import ruptures as rpt
+
     logger.info("[1/3] Building break-detection panel...")
 
     cpi = load_series("CPIAUCNS", cache_dir=cache_dir)
@@ -100,9 +119,38 @@ def step_breaks(
     logger.info("    panel shape: %s, range %s -> %s",
                 panel.shape, panel.index.min().date(), panel.index.max().date())
 
-    logger.info("[1/3] Running Bai-Perron break detection (PELT, RBF cost)...")
+    # Sensitivity scan: report break counts at multiple penalty scales so the
+    # user can see whether the registered specification's null result is
+    # robust or an artifact of penalty calibration.
+    n, k = panel.shape
+    base_penalty = float(k * math.log(n))
+    arr = panel.to_numpy(dtype=float)
+    min_size = max(2, int(0.10 * n))
+    logger.info("    penalty sensitivity (k*log(n)=%.2f, cost=%s):",
+                base_penalty, cost)
+    for scale in (1.0, 0.5, 0.25):
+        algo = rpt.Pelt(model=cost, min_size=min_size).fit(arr)
+        bps = algo.predict(pen=scale * base_penalty)
+        n_brk = len(bps) - 1
+        if n_brk > 0:
+            dates = [panel.index[i].strftime("%Y-Q%q") for i in bps[:-1]]
+            dates_clean = []
+            for i in bps[:-1]:
+                ts = panel.index[i]
+                dates_clean.append(f"{ts.year}-Q{(ts.month - 1) // 3 + 1}")
+            logger.info("      scale=%.2f, pen=%.2f: %d breaks at %s",
+                        scale, scale * base_penalty, n_brk, dates_clean)
+        else:
+            logger.info("      scale=%.2f, pen=%.2f: 0 breaks",
+                        scale, scale * base_penalty)
+
+    logger.info("[1/3] Running Bai-Perron break detection (PELT, %s cost, "
+                "penalty_scale=%.2f)...", cost, penalty_scale)
     t0 = time.time()
-    result = detect_breaks_baiperron(panel, trim=0.10, max_breaks=5, cost="rbf")
+    result = detect_breaks_baiperron(
+        panel, trim=0.10, max_breaks=5, cost=cost,
+        penalty=penalty_scale * base_penalty,
+    )
     logger.info("    detected %d breaks -> %d regimes in %.1fs",
                 result.n_breaks, result.n_regimes, time.time() - t0)
     if result.break_dates:
@@ -306,6 +354,20 @@ def main(argv: list[str] | None = None) -> int:
         help="Skip the counterfactual step (slow due to bootstrap).",
     )
     parser.add_argument(
+        "--break-penalty-scale", type=float, default=1.0, metavar="X",
+        help="Multiplier on the default BIC-style penalty (k*log(n)) for "
+             "break detection. Default 1.0 = registered specification. "
+             "Smaller values admit more breaks; values around 0.25 typically "
+             "detect canonical 1972/1982 regimes on the standard panel. The "
+             "driver always reports a sensitivity scan at scales 1.0, 0.5, "
+             "0.25 regardless of which scale is used for the saved result.",
+    )
+    parser.add_argument(
+        "--break-cost", default="rbf", choices=["rbf", "l2", "l1"],
+        help="ruptures cost function for break detection. Default: rbf "
+             "(non-parametric). l2 = sum-of-squared-deviations from segment means.",
+    )
+    parser.add_argument(
         "--quick", action="store_true",
         help="Use n_bootstrap=200 for the counterfactual instead of the "
              "1,000 default. Useful for laptop iteration; not for final results.",
@@ -354,7 +416,11 @@ def main(argv: list[str] | None = None) -> int:
         ).iloc[:, 0]
     else:
         try:
-            br = step_breaks(processed_dir, cache_dir)
+            br = step_breaks(
+                processed_dir, cache_dir,
+                penalty_scale=args.break_penalty_scale,
+                cost=args.break_cost,
+            )
         except Exception as exc:
             logger.exception("Step 1 (breaks) failed: %s", exc)
             return 2

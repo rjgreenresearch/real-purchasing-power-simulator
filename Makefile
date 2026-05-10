@@ -21,6 +21,8 @@ help:
 	@echo "  make phase3       run break detection, regime regression, counterfactual"
 	@echo "                    requires 'make metrics' to have been run first"
 	@echo "  make phase3-quick faster phase3 with n_bootstrap=200 (laptop iteration)"
+	@echo "  make phase3-permissive  phase3 with break-penalty-scale=0.25"
+	@echo "                    (typically detects 1972/1982 canonical regimes)"
 	@echo "  make report       generate a self-contained HTML analysis report"
 	@echo "                    if phase3 outputs exist, the report includes them"
 	@echo "  make lint         run ruff linter"
@@ -55,6 +57,9 @@ phase3:
 
 phase3-quick:
 	$(PYTHON) run_phase3.py --quick
+
+phase3-permissive:
+	$(PYTHON) run_phase3.py --break-penalty-scale 0.25
 
 report:
 	$(PYTHON) -m rpps.report --processed-dir data/processed --output report.html

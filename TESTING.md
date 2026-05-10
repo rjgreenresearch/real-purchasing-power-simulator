@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.4.2: **357 tests, 0 failed, ~46 s wall-clock**.
+Expected baseline as of v0.4.3: **357 tests, 0 failed, ~46 s wall-clock**.
 (matplotlib figure rendering pulls the wall-clock up; Phase 1-3 alone runs in ~24s).
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
@@ -330,7 +330,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.4.2 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.4.3 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -535,6 +535,27 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.4.3 - Break-detection penalty calibration**. The v0.4.2 driver
+  reported zero structural breaks on the user's actual FRED-derived panel
+  with the default `k * log(n)` penalty (the §5.2 registered specification).
+  Investigation showed PELT with RBF cost on quarterly YoY-growth data of
+  this scale (means ~0.03, std ~0.02-0.05) produces total cost values too
+  small for the default penalty to admit any breaks; reducing the penalty
+  to `0.25 * k * log(n)` detects the canonical 1972 (Bretton Woods) and
+  1982 (Volcker) regime transitions documented in the literature. The
+  v0.4.3 driver adds two new CLI flags: `--break-penalty-scale` (default
+  1.0, preserving the registered spec) and `--break-cost` (default "rbf"),
+  plus a sensitivity scan that always reports the break counts at scales
+  1.0, 0.5, and 0.25 regardless of which scale produces the saved result.
+  This lets the user pre-commit a single penalty for the H1 test while
+  reporting the sensitivity in the paper. New `make phase3-permissive`
+  target runs with `--break-penalty-scale 0.25`. The +105.5% counterfactual
+  gap reported by the v0.4.2 run is the registered §5.4 OLS specification's
+  answer (it comfortably exceeds the H4 ≥20% threshold and the 95% CI
+  excludes zero), and the discrepancy with a simpler PRWDI-ratio gap
+  (+66%) is itself a methodologically interesting observation worth
+  reporting alongside the registered result.
+
 - **v0.4.2 - Phase 3 driver**. New `run_phase3.py` at the repo root is a
   ~250-line orchestrator that loads the spliced data + relevant FRED series,
   runs `rpps.breaks` -> `rpps.regression` -> `rpps.counterfactual` in
@@ -710,4 +731,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.4.2. Maintained by the `rpps` authors.*
+*Last updated: v0.4.3. Maintained by the `rpps` authors.*
