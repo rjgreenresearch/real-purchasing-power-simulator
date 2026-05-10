@@ -1,0 +1,14 @@
+{
+  "series_id": "COMPRNFB",
+  "downloaded_at": "2026-05-10T03:07:18.457952+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 317,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 317,
+  "n_missing": 0,
+  "sha256": "d24cccaaee3c8828d2f3efdbf54ed73b31404deb875a9855a6c92b5d6b64ffa3"
+}

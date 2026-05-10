@@ -1,0 +1,14 @@
+{
+  "series_id": "OPHNFB",
+  "downloaded_at": "2026-05-10T03:07:25.988780+00:00",
+  "realtime_start": "2026-05-07",
+  "realtime_end": "2026-05-07",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 317,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 317,
+  "n_missing": 0,
+  "sha256": "53e7918f690b22f88f653b617ce224c48efafd7a7e3ee573818ec5e0cc6fd5a1"
+}

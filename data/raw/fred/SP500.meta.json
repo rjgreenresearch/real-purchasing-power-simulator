@@ -1,0 +1,14 @@
+{
+  "series_id": "SP500",
+  "downloaded_at": "2026-05-10T03:07:41.332457+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 2610,
+  "first_obs_date": "2016-05-09",
+  "last_obs_date": "2026-05-08",
+  "n_observations": 2610,
+  "n_missing": 95,
+  "sha256": "e674f95da0010a5781302b2121ed630709c64bec48a6bcc8e51ed6b8bce1d169"
+}

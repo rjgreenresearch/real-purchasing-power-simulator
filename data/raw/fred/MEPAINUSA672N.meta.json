@@ -1,0 +1,14 @@
+{
+  "series_id": "MEPAINUSA672N",
+  "downloaded_at": "2026-05-10T03:07:22.129448+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 51,
+  "first_obs_date": "1974-01-01",
+  "last_obs_date": "2024-01-01",
+  "n_observations": 51,
+  "n_missing": 0,
+  "sha256": "9bcbe4cf45d09747ae77f49d454c2a87268ac05a1b9d3e7bd89a1fa4491e2c8b"
+}

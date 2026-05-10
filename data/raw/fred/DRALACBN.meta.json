@@ -1,0 +1,14 @@
+{
+  "series_id": "DRALACBN",
+  "downloaded_at": "2026-05-10T03:07:36.595985+00:00",
+  "realtime_start": "2026-03-30",
+  "realtime_end": "2026-03-30",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 164,
+  "first_obs_date": "1985-01-01",
+  "last_obs_date": "2025-10-01",
+  "n_observations": 164,
+  "n_missing": 0,
+  "sha256": "215b76042054dfc3381b4f20fa6a62de3bc2f65a16a48dade6f8bb15aa12fda0"
+}

@@ -1,0 +1,14 @@
+{
+  "series_id": "A229RX0",
+  "downloaded_at": "2026-05-10T03:07:24.098170+00:00",
+  "realtime_start": "2026-05-01",
+  "realtime_end": "2026-05-01",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 807,
+  "first_obs_date": "1959-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 807,
+  "n_missing": 0,
+  "sha256": "e6e10f49f57a0f1d25e8c6627e88ca65188e7123457b1b1746d7571d4ecc2d7b"
+}

@@ -1,0 +1,14 @@
+{
+  "series_id": "FODSP",
+  "downloaded_at": "2026-05-10T03:07:33.726553+00:00",
+  "realtime_start": "2026-05-08",
+  "realtime_end": "2026-05-08",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 175,
+  "first_obs_date": "1980-01-01",
+  "last_obs_date": "2023-07-01",
+  "n_observations": 175,
+  "n_missing": 0,
+  "sha256": "8ebb8b9ca26bfb16acdaf3b90b034ac0134cde249109dfbb8a3c8fa21c7fe926"
+}

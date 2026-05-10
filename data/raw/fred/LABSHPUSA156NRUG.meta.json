@@ -1,0 +1,14 @@
+{
+  "series_id": "LABSHPUSA156NRUG",
+  "downloaded_at": "2026-05-10T03:07:29.782819+00:00",
+  "realtime_start": "2026-05-05",
+  "realtime_end": "2026-05-05",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 74,
+  "first_obs_date": "1950-01-01",
+  "last_obs_date": "2023-01-01",
+  "n_observations": 74,
+  "n_missing": 0,
+  "sha256": "d3ffc8e651d875fbf25e703672076704a9794a0c3a6345bd8e3777f1c82c4727"
+}

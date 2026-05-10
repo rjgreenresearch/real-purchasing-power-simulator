@@ -1,0 +1,14 @@
+{
+  "series_id": "GASREGW",
+  "downloaded_at": "2026-05-10T03:07:44.817038+00:00",
+  "realtime_start": "2026-05-05",
+  "realtime_end": "2026-05-05",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 1864,
+  "first_obs_date": "1990-08-20",
+  "last_obs_date": "2026-05-04",
+  "n_observations": 1864,
+  "n_missing": 6,
+  "sha256": "dce12efb43b95022aad597d37d539de86fbfbcd94fa38623e6df115fa7f9f04a"
+}

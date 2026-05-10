@@ -1,0 +1,14 @@
+{
+  "series_id": "MORTGAGE30US",
+  "downloaded_at": "2026-05-10T03:07:42.772442+00:00",
+  "realtime_start": "2026-05-07",
+  "realtime_end": "2026-05-07",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 2876,
+  "first_obs_date": "1971-04-02",
+  "last_obs_date": "2026-05-07",
+  "n_observations": 2876,
+  "n_missing": 0,
+  "sha256": "cda1c8af6bc5304546baceed1f214265dc6a623887d4e449bc68f60605941fc9"
+}

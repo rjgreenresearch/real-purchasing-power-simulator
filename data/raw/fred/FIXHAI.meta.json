@@ -1,0 +1,14 @@
+{
+  "series_id": "FIXHAI",
+  "downloaded_at": "2026-05-10T03:07:43.810427+00:00",
+  "realtime_start": "2026-04-13",
+  "realtime_end": "2026-04-13",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 14,
+  "first_obs_date": "2025-02-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 14,
+  "n_missing": 1,
+  "sha256": "bf243f6c72b301a35e8b3077056babce05cf7f1a26ee02aa5daa569d087cee1f"
+}

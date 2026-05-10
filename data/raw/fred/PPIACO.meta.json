@@ -1,0 +1,14 @@
+{
+  "series_id": "PPIACO",
+  "downloaded_at": "2026-05-10T03:07:10.043089+00:00",
+  "realtime_start": "2026-04-14",
+  "realtime_end": "2026-04-14",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 1359,
+  "first_obs_date": "1913-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 1359,
+  "n_missing": 0,
+  "sha256": "2844636f5dbfc552f70efac6c1d6a7ddbf9edf8c29695eb5aca4796ad0aaefa8"
+}

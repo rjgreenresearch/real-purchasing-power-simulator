@@ -1,0 +1,14 @@
+{
+  "series_id": "DHHNGSP",
+  "downloaded_at": "2026-05-10T03:07:47.829793+00:00",
+  "realtime_start": "2026-05-07",
+  "realtime_end": "2026-05-07",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 7650,
+  "first_obs_date": "1997-01-07",
+  "last_obs_date": "2026-05-04",
+  "n_observations": 7650,
+  "n_missing": 287,
+  "sha256": "e289d15e1b83b2e7cd7a5b638b37952cd91fdfad44a6ca72b61ddc32c98ea6cc"
+}

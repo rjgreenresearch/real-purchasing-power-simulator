@@ -1,0 +1,14 @@
+{
+  "series_id": "MEHOINUSA672N",
+  "downloaded_at": "2026-05-10T03:07:21.203355+00:00",
+  "realtime_start": "2026-04-05",
+  "realtime_end": "2026-04-05",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 41,
+  "first_obs_date": "1984-01-01",
+  "last_obs_date": "2024-01-01",
+  "n_observations": 41,
+  "n_missing": 0,
+  "sha256": "d82930da467d7d92f8aeecd63416551f68b6b0481054e9009ad41a99613b316d"
+}

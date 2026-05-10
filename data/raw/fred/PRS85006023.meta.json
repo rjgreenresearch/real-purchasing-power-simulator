@@ -1,0 +1,14 @@
+{
+  "series_id": "PRS85006023",
+  "downloaded_at": "2026-05-10T03:07:25.025285+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 317,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 317,
+  "n_missing": 0,
+  "sha256": "0f8f4f41c16fd2808a9bea3eddea42cdf47d1923746a7f1081432b0c1f2c8cd7"
+}

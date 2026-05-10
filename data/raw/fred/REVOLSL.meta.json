@@ -1,0 +1,14 @@
+{
+  "series_id": "REVOLSL",
+  "downloaded_at": "2026-05-10T03:07:35.603071+00:00",
+  "realtime_start": "2026-05-08",
+  "realtime_end": "2026-05-08",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 699,
+  "first_obs_date": "1968-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 699,
+  "n_missing": 0,
+  "sha256": "f096eeb38b42c8849266ad5abab998112c12b12ac34d622ef49cd9aa4beccb6c"
+}

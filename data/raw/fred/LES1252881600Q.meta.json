@@ -1,0 +1,14 @@
+{
+  "series_id": "LES1252881600Q",
+  "downloaded_at": "2026-05-10T03:07:20.311421+00:00",
+  "realtime_start": "2026-04-30",
+  "realtime_end": "2026-04-30",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 189,
+  "first_obs_date": "1979-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 189,
+  "n_missing": 1,
+  "sha256": "9294d8a8ae5cd737382358a15d15d1d0e701cc4a28e38d0a9186e62bc2634b4c"
+}

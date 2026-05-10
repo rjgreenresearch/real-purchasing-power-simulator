@@ -1,0 +1,14 @@
+{
+  "series_id": "ULCNFB",
+  "downloaded_at": "2026-05-10T03:07:28.816851+00:00",
+  "realtime_start": "2026-05-08",
+  "realtime_end": "2026-05-08",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 317,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 317,
+  "n_missing": 0,
+  "sha256": "f123e67dad066678d7b130503ad75caaf455ae91a92b4b270b711110bc6de80c"
+}

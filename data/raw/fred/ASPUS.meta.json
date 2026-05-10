@@ -1,0 +1,14 @@
+{
+  "series_id": "ASPUS",
+  "downloaded_at": "2026-05-10T03:07:40.418733+00:00",
+  "realtime_start": "2026-05-05",
+  "realtime_end": "2026-05-05",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 253,
+  "first_obs_date": "1963-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 253,
+  "n_missing": 0,
+  "sha256": "367cb933d697309f973ddfb4b222d7fc6f74af7ff153577864301ead9b789de3"
+}

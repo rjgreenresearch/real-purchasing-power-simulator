@@ -1,0 +1,14 @@
+{
+  "series_id": "AHETPI",
+  "downloaded_at": "2026-05-10T03:07:16.621696+00:00",
+  "realtime_start": "2026-05-08",
+  "realtime_end": "2026-05-08",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 748,
+  "first_obs_date": "1964-01-01",
+  "last_obs_date": "2026-04-01",
+  "n_observations": 748,
+  "n_missing": 0,
+  "sha256": "1db1a14244a36f027d37c122d49c9f55488cc5dc6080e9b4c02828d2b615eec5"
+}

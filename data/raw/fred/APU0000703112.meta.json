@@ -1,0 +1,14 @@
+{
+  "series_id": "APU0000703112",
+  "downloaded_at": "2026-05-10T03:07:49.875968+00:00",
+  "realtime_start": "2026-04-11",
+  "realtime_end": "2026-04-11",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 507,
+  "first_obs_date": "1984-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 507,
+  "n_missing": 2,
+  "sha256": "fa8b82616266572cd944beb28009a3b460afb45e006270d78b37cb3def083dcf"
+}

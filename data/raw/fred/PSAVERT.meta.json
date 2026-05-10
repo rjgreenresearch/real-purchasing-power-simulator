@@ -1,0 +1,14 @@
+{
+  "series_id": "PSAVERT",
+  "downloaded_at": "2026-05-10T03:07:31.863937+00:00",
+  "realtime_start": "2026-04-30",
+  "realtime_end": "2026-04-30",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 807,
+  "first_obs_date": "1959-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 807,
+  "n_missing": 0,
+  "sha256": "de61297c08fe3038820f9997f1753390e1de187ba46cf5f7643dd84e52d12db5"
+}

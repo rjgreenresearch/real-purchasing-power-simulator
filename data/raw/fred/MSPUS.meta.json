@@ -1,0 +1,14 @@
+{
+  "series_id": "MSPUS",
+  "downloaded_at": "2026-05-10T03:07:39.501764+00:00",
+  "realtime_start": "2026-05-05",
+  "realtime_end": "2026-05-05",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 253,
+  "first_obs_date": "1963-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 253,
+  "n_missing": 0,
+  "sha256": "79e066f0b39aa48ba8cd44e0a69f3c91ca93848533d8b33a4c7757ce921dbbf0"
+}

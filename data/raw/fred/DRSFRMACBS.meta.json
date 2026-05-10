@@ -1,0 +1,14 @@
+{
+  "series_id": "DRSFRMACBS",
+  "downloaded_at": "2026-05-10T03:07:37.602419+00:00",
+  "realtime_start": "2026-04-05",
+  "realtime_end": "2026-04-05",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 140,
+  "first_obs_date": "1991-01-01",
+  "last_obs_date": "2025-10-01",
+  "n_observations": 140,
+  "n_missing": 0,
+  "sha256": "cb34aaed70e7c0d17e179b4d856d94b784a561501a5137f07ed291169562f1e9"
+}

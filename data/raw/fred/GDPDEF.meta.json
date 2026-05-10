@@ -1,0 +1,14 @@
+{
+  "series_id": "GDPDEF",
+  "downloaded_at": "2026-05-10T03:07:10.949122+00:00",
+  "realtime_start": "2026-04-30",
+  "realtime_end": "2026-04-30",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 317,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 317,
+  "n_missing": 0,
+  "sha256": "a1c1cb0d4430d8ff726a0173a0a380ee7a00ac7aa309ca69044ee5937e8e1391"
+}

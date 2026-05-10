@@ -1,0 +1,14 @@
+{
+  "series_id": "CPIAUCNS",
+  "downloaded_at": "2026-05-10T03:07:08.224911+00:00",
+  "realtime_start": "2026-04-10",
+  "realtime_end": "2026-04-10",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 1359,
+  "first_obs_date": "1913-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 1359,
+  "n_missing": 1,
+  "sha256": "2ccc58e2e08a0354e48b3adcd16028bd93e346bbfa589608b0bef26a58384e51"
+}

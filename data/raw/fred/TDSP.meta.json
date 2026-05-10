@@ -1,0 +1,14 @@
+{
+  "series_id": "TDSP",
+  "downloaded_at": "2026-05-10T03:07:32.822165+00:00",
+  "realtime_start": "2026-04-06",
+  "realtime_end": "2026-04-06",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 184,
+  "first_obs_date": "1980-01-01",
+  "last_obs_date": "2025-10-01",
+  "n_observations": 184,
+  "n_missing": 100,
+  "sha256": "0552a87c9f06b9b41766d2af5789018a98de6bdb1664caa02076d06acf16eac5"
+}

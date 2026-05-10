@@ -1,0 +1,14 @@
+{
+  "series_id": "WPS0561",
+  "downloaded_at": "2026-05-10T03:07:12.982599+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 516,
+  "first_obs_date": "1967-01-01",
+  "last_obs_date": "2009-12-01",
+  "n_observations": 516,
+  "n_missing": 396,
+  "sha256": "6fedab7c92bf7cd44b3254fd7e93ca54915f2df372ba4e4a2f2f7a9a7409fe1a"
+}

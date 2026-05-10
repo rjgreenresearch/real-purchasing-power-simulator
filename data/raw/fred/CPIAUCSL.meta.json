@@ -1,0 +1,14 @@
+{
+  "series_id": "CPIAUCSL",
+  "downloaded_at": "2026-05-10T03:07:09.131343+00:00",
+  "realtime_start": "2026-04-10",
+  "realtime_end": "2026-04-10",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 951,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 951,
+  "n_missing": 1,
+  "sha256": "2a69c3c8fb692d44627a376e5d5117dd17ec78740c49beb68839d293fb475a6c"
+}

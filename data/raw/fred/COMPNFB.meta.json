@@ -1,0 +1,14 @@
+{
+  "series_id": "COMPNFB",
+  "downloaded_at": "2026-05-10T03:07:19.386942+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 317,
+  "first_obs_date": "1947-01-01",
+  "last_obs_date": "2026-01-01",
+  "n_observations": 317,
+  "n_missing": 0,
+  "sha256": "a0c7b028ab8c49aa271514e8f81259de82583b434d6b182dd7ec8174275aa389"
+}

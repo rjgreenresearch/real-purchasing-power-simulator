@@ -1,0 +1,14 @@
+{
+  "series_id": "WPU0911",
+  "downloaded_at": "2026-05-10T03:07:13.879978+00:00",
+  "realtime_start": "2026-04-15",
+  "realtime_end": "2026-04-15",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 1203,
+  "first_obs_date": "1926-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 1203,
+  "n_missing": 0,
+  "sha256": "fad9e9bf407ebd81c37bd7d8c5fadd2085c9efafdf7fd56f4adb0c72c3d90a02"
+}

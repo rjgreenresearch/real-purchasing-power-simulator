@@ -1,0 +1,14 @@
+{
+  "series_id": "CSUSHPISA",
+  "downloaded_at": "2026-05-10T03:07:38.544820+00:00",
+  "realtime_start": "2026-04-28",
+  "realtime_end": "2026-04-28",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 614,
+  "first_obs_date": "1975-01-01",
+  "last_obs_date": "2026-02-01",
+  "n_observations": 614,
+  "n_missing": 144,
+  "sha256": "b68b3c1c15c40249e51fa5c59811b9789de6ab3b6d7752606d2020a0527c649a"
+}

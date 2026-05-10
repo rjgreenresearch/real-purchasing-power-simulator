@@ -1,0 +1,14 @@
+{
+  "series_id": "DCOILWTICO",
+  "downloaded_at": "2026-05-10T03:07:46.824566+00:00",
+  "realtime_start": "2026-05-06",
+  "realtime_end": "2026-05-06",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 10523,
+  "first_obs_date": "1986-01-02",
+  "last_obs_date": "2026-05-04",
+  "n_observations": 10523,
+  "n_missing": 370,
+  "sha256": "d828bb3d651c2d37f1180b76fd853c2a10b6a48d02a8e269bafff6a30a53a598"
+}

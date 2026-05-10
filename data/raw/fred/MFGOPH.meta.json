@@ -1,0 +1,14 @@
+{
+  "series_id": "MFGOPH",
+  "downloaded_at": "2026-05-10T03:07:27.646270+00:00",
+  "realtime_start": "2026-05-09",
+  "realtime_end": "2026-05-09",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 76,
+  "first_obs_date": "1949-01-01",
+  "last_obs_date": "2024-01-01",
+  "n_observations": 76,
+  "n_missing": 38,
+  "sha256": "4503bca38b4cc50472462b94095c0970baf64625e5da57299d70945ef6bdf54e"
+}

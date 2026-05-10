@@ -1,0 +1,14 @@
+{
+  "series_id": "PCEPI",
+  "downloaded_at": "2026-05-10T03:07:11.959579+00:00",
+  "realtime_start": "2026-04-30",
+  "realtime_end": "2026-04-30",
+  "observation_start": "1600-01-01",
+  "observation_end": "9999-12-31",
+  "count": 807,
+  "first_obs_date": "1959-01-01",
+  "last_obs_date": "2026-03-01",
+  "n_observations": 807,
+  "n_missing": 0,
+  "sha256": "5be9c509490e9f37bb823e0a20a189fdf573f9f47dd296280d56f8fb51eb89d2"
+}
