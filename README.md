@@ -25,14 +25,15 @@ Each step is reproducible end-to-end from publicly available data with a single 
 
 ## Status
 
-Phase 1 (data foundation), Phase 2 (derived metrics), and Phase 3 (analysis layer) are implemented in this release.
+Phase 1 (data foundation), Phase 2 (derived metrics), Phase 3 (analysis layer), and the reporting half of Phase 4 are implemented in this release.
 
 | Phase | Module | Status |
 |-------|--------|--------|
 | 1 | FRED + NBER acquisition, splice, basket definition | ✅ Implemented (v0.1) |
 | 2 | RPPH / WICR / PRWDI metric computation | ✅ Implemented (v0.2) |
 | 3 | Bai-Perron break detection, within-regime regression, counterfactual | ✅ Implemented (v0.3) |
-| 4 | CLI, notebooks, end-to-end reproduction | ⏳ Forthcoming |
+| 4a | HTML report generation (`make report`) | ✅ Implemented (v0.4) |
+| 4b | Top-level CLI orchestrator, reproduction notebooks | ⏳ Forthcoming |
 
 ---
 
@@ -108,6 +109,27 @@ cf = compute_counterfactual(prod, real_comp,
 print(f"Final pct gap: {cf.final_pct_gap:.1%}")
 print(f"Bootstrap 95% CI: [{cf.final_pct_gap_ci[0]:.1%}, {cf.final_pct_gap_ci[1]:.1%}]")
 ```
+
+### Generate a shareable HTML report (Phase 4a, v0.4+)
+
+After running `make data` and `make metrics`, produce a single self-contained HTML report:
+
+```bash
+make report                          # writes report.html in the repo root
+```
+
+Or programmatically:
+
+```python
+from rpps.report import build_report
+result = build_report(
+    processed_dir="data/processed",
+    output_path="report.html",
+)
+print(f"Wrote {result['size_bytes']:,} bytes covering: {result['available_phases']}")
+```
+
+The report is a single HTML file (~640 KB) with all figures embedded as base64 PNGs — no external assets, opens in any browser, prints cleanly to PDF, emails as one attachment. Sections automatically include or skip based on which processed artifacts are present (Phase 3 results appear only if you've run breaks/regression/counterfactual).
 
 ---
 

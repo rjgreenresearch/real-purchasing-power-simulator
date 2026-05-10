@@ -302,20 +302,34 @@ class TestBasketCostPanel:
         assert early_2000["tuition"].dropna().shape[0] > 0
         assert early_2000["healthcare"].dropna().shape[0] > 0
 
-    def test_panel_missing_fred_items_skipped_with_warning(self, caplog):
-        """If a FRED-sourced item is uncached, the panel skips it instead of erroring."""
+    def test_panel_missing_fred_items_skipped_with_warning(self, caplog, tmp_path):
+        """If a FRED-sourced item is uncached, the panel skips it instead of erroring.
+
+        Uses tmp_path as cache_dir so the test is isolated from any real
+        FRED cache the developer may have populated via `make data`. Without
+        this isolation, the test passes on a fresh checkout but fails after
+        `make data` cached the GASREGW series — caused two test failures
+        on Windows in v0.3.7.
+        """
         import logging
         with caplog.at_level(logging.WARNING):
-            df = basket_cost_panel(items=["gasoline", "tuition"])
-        # Tuition should appear; gasoline (FRED) should be skipped
+            df = basket_cost_panel(
+                items=["gasoline", "tuition"],
+                cache_dir=tmp_path,
+            )
+        # Tuition should appear (loads from external CSV, not FRED);
+        # gasoline (FRED) should be skipped because tmp_path is empty.
         assert "tuition" in df.columns
         assert "gasoline" not in df.columns
         assert any("gasoline" in rec.message for rec in caplog.records)
 
-    def test_empty_panel_when_all_skipped(self):
+    def test_empty_panel_when_all_skipped(self, tmp_path):
         """If no items are available, return an empty DataFrame, not an error."""
-        # Using only FRED items with no cache → all skipped
-        df = basket_cost_panel(items=["gasoline", "beef"])
+        # Pass empty tmp_path as cache_dir so neither FRED item resolves.
+        df = basket_cost_panel(
+            items=["gasoline", "beef"],
+            cache_dir=tmp_path,
+        )
         # Either empty DataFrame or DataFrame with no columns
         assert df.empty or df.shape[1] == 0
 

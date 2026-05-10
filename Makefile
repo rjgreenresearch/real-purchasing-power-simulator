@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov data metrics clean lint typecheck all
+.PHONY: help install install-dev test test-cov data metrics report clean lint typecheck all
 
 # All Python tools are invoked as `python -m <tool>` rather than as bare
 # executables. This works on Windows even when C:\Python3xx\Scripts\ is
@@ -18,6 +18,8 @@ help:
 	@echo "                    requires FRED_API_KEY environment variable"
 	@echo "  make metrics      compute RPPH, WICR, PRWDI from the spliced dataset"
 	@echo "                    requires 'make data' to have been run first"
+	@echo "  make report       generate a self-contained HTML analysis report"
+	@echo "                    requires 'make metrics' to have been run first"
 	@echo "  make lint         run ruff linter"
 	@echo "  make typecheck    run mypy static type checker"
 	@echo "  make clean        remove caches and processed outputs"
@@ -44,6 +46,12 @@ data:
 
 metrics:
 	$(PYTHON) -m rpps.metrics.compute_all --output data/processed
+
+report:
+	$(PYTHON) -m rpps.report --processed-dir data/processed --output report.html
+	@echo ""
+	@echo "Report written to: report.html"
+	@echo "Open in any browser; the report is a self-contained single file."
 
 lint:
 	$(PYTHON) -m ruff check rpps/ tests/

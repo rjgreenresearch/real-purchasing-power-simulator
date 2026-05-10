@@ -271,7 +271,7 @@ def basket_cost_panel(
     if not panels:
         return pd.DataFrame()
 
-    df = pd.concat(panels, axis=1)
+    df = pd.concat(panels, axis=1, sort=False)
     df.columns.name = "item"
     return df
 

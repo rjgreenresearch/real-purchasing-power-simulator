@@ -40,7 +40,8 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.3.7: **277 tests, 0 failed, ~23 s wall-clock**.
+Expected baseline as of v0.4.0: **313 tests, 0 failed, ~48 s wall-clock**
+(matplotlib figure rendering pulls the wall-clock up; Phase 1-3 alone runs in ~24s).
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
 suspect is `pip install -e ".[dev]" --break-system-packages` not having been
@@ -329,7 +330,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.3.7 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.4.0 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -534,6 +535,23 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.4.0 - Phase 4a: HTML reporting**. New `rpps/visualization.py`
+  module with matplotlib figure-generation functions (one per metric,
+  Tufte-leaning style, headless backend) and new `rpps/report.py` module
+  that loads processed CSV/JSON artifacts and renders a single
+  self-contained HTML report with figures embedded as base64 PNGs. New
+  `make report` target; new `python -m rpps.report` CLI. 36 new tests
+  (18 visualization, 18 report) covering figure structure (axes count,
+  line counts, log scales), HTML structure (sections, embedded images,
+  CSS), the load_inputs dispatcher (phase auto-detection from present
+  files), the build_report end-to-end pipeline, and the CLI entry point.
+  Also fixed a Windows-specific test isolation bug in two
+  `test_basket.py` tests that consulted the on-disk FRED cache instead
+  of running through their mocks; passing `cache_dir=tmp_path` makes
+  them deterministic across machines regardless of whether `make data`
+  has populated the real cache. Silenced the `Pandas4Warning` in
+  `basket.py` by passing `sort=False` to the panel concat.
+
 - **v0.3.7 — Wage splice modern leg correction**. The catalog declared
   `AHETPI` (the splice's modern leg) as starting in 1939, but FRED's
   AHETPI series is "Total Private" production-worker wages and only
@@ -662,4 +680,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.3.7. Maintained by the `rpps` authors.*
+*Last updated: v0.4.0. Maintained by the `rpps` authors.*
