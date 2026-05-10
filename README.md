@@ -110,6 +110,25 @@ print(f"Final pct gap: {cf.final_pct_gap:.1%}")
 print(f"Bootstrap 95% CI: [{cf.final_pct_gap_ci[0]:.1%}, {cf.final_pct_gap_ci[1]:.1%}]")
 ```
 
+### Run the full Phase 3 pipeline (v0.4.2+)
+
+After `make data` and `make metrics`, run all three Phase 3 modules in one shot:
+
+```bash
+make phase3          # full bootstrap (n=1000); the publishable run
+make phase3-quick    # n=200 bootstrap; for laptop iteration
+```
+
+Or directly:
+
+```bash
+python run_phase3.py                    # full
+python run_phase3.py --quick            # faster
+python run_phase3.py --skip-breaks      # re-run regression+CF only
+```
+
+The driver writes Phase 3 outputs into `data/processed/` with the filenames `rpps.report` reads automatically. After `make phase3`, re-run `make report` and the §3 (regime structure, cross-regime tests, counterfactual gap) panel appears in the HTML report and the synthesis section's H4 line populates with the actual gap and bootstrap CI.
+
 ### Generate a shareable HTML report (Phase 4a, v0.4+)
 
 After running `make data` and `make metrics`, produce a single self-contained HTML report:

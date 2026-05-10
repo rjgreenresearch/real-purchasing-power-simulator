@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.4.1: **345 tests, 0 failed, ~30 s wall-clock**.
+Expected baseline as of v0.4.2: **357 tests, 0 failed, ~46 s wall-clock**.
 (matplotlib figure rendering pulls the wall-clock up; Phase 1-3 alone runs in ~24s).
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
@@ -330,7 +330,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.4.1 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.4.2 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -535,6 +535,21 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.4.2 - Phase 3 driver**. New `run_phase3.py` at the repo root is a
+  ~250-line orchestrator that loads the spliced data + relevant FRED series,
+  runs `rpps.breaks` -> `rpps.regression` -> `rpps.counterfactual` in
+  sequence, and writes outputs to `data/processed/` with the exact
+  filenames `rpps.report.load_inputs` reads. New `make phase3` and `make
+  phase3-quick` targets (the `--quick` form drops bootstrap iterations from
+  1,000 to 200 for laptop iteration). `--skip-{breaks,regression,
+  counterfactual}` flags allow re-running individual stages. 12 new tests
+  in `tests/test_run_phase3.py` cover argument parsing, input validation,
+  the file-naming contract with `rpps.report` (assertions that the save
+  helpers' output filenames match what `load_inputs` reads, so a future
+  rename can't silently break the report's Phase 3 panel), and per-step
+  smoke tests against synthetic FRED caches. The full pipeline is now
+  `make data` -> `make metrics` -> `make phase3` -> `make report`.
+
 - **v0.4.1 - Narrative layer**. New `rpps/narrative.py` module with
   data-driven prose generators that pull values from the loaded inputs
   and weave them into HTML-ready paragraphs tied to the paper's three
@@ -695,4 +710,4 @@ adding new series without having to do a full `make data` run.
 
 ---
 
-*Last updated: v0.4.1. Maintained by the `rpps` authors.*
+*Last updated: v0.4.2. Maintained by the `rpps` authors.*
