@@ -13,8 +13,8 @@ from the NBER Macrohistory archive and spliced to the FRED series.
 This module implements two principal splices:
 
 1. WAGE SPLICE
-   AHETPI (1939+, monthly) ↔ M0844AUSM052NNBR (1923–1942, monthly)
-   Overlap window: 1939Q1 – 1942Q4 (4 years of monthly data, ~48 observations)
+   AHETPI (1939+, monthly) <-> M08142USM055NNBR (1920-1948, monthly)
+   Overlap window: 1939Q1 - 1942Q4 (4 years of monthly data, ~48 observations)
 
 2. PRODUCTIVITY SPLICE
    OPHNFB (1947+, quarterly) ↔ Kendrick (1961) annual productivity index
@@ -61,7 +61,7 @@ EXTERNAL_DIR = REPO_ROOT / "data" / "external"
 
 # Wage splice
 WAGE_MODERN_SERIES = "AHETPI"        # FRED, 1939+, monthly
-WAGE_LEGACY_SERIES = "M0844AUSM052NNBR"  # NBER mirror on FRED, 1923–1942, monthly
+WAGE_LEGACY_SERIES = "M08142USM055NNBR"  # NBER mirror on FRED, 1920-1948, monthly
 WAGE_OVERLAP_START = "1939-01-01"
 WAGE_OVERLAP_END = "1942-12-31"
 

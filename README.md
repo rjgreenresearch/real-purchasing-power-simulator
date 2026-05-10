@@ -164,7 +164,7 @@ real-purchasing-power-simulator/
 
 ## The splice methodology (the part most likely to need iteration)
 
-For the principal nominal-wage series, the FRED `AHETPI` (Average Hourly Earnings of Production and Nonsupervisory Employees, 1939+) is the canonical post-1939 source. Pre-1939, the NBER Macrohistory series `M0844AUSM052NNBR` (manufacturing average hourly earnings, monthly, 1923–1942) is the closest available substitute.
+For the principal nominal-wage series, the FRED `AHETPI` (Average Hourly Earnings of Production and Nonsupervisory Employees, 1939+) is the canonical post-1939 source. Pre-1939, the NBER Macrohistory series `M08142USM055NNBR` (Average Hourly Earnings, Twenty-Five Manufacturing Industries, monthly, 1920–1948) is the closest available substitute.
 
 The simulator splices using a multiplicative level adjustment computed over the 1939Q1–1942Q4 overlap window:
 

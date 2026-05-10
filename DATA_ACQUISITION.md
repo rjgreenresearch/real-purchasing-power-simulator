@@ -98,7 +98,7 @@ NBER Macrohistory series are accessed through FRED (most are mirrored under thei
 
 | Series ID | Description | Frequency | Coverage |
 |-----------|-------------|-----------|----------|
-| `M0844AUSM052NNBR` | Manufacturing Average Hourly Earnings, U.S. (Mitchell, Burns, Beney) | Monthly | 1923–1942 |
+| `M08142USM055NNBR` | Average Hourly Earnings, Twenty-Five Manufacturing Industries (NBER, NICB) | Monthly | 1920–1948 |
 | `M04051USM324NNBR` | Wholesale Price Index of All Commodities (BLS, historical) | Monthly | 1913–1969 |
 | Kendrick (1961) productivity index | Pre-1947 productivity, annual | Annual | 1869–1957 |
 | Gordon (2016) productivity revision | Pre-1947 productivity with quality adjustment | Annual | 1869–2014 |

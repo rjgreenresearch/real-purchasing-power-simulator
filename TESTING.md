@@ -40,7 +40,7 @@ above — it always works because Python finds its own modules without
 needing PATH to be set up. The Makefile uses `python -m` invocations
 internally so `make test` works regardless.
 
-Expected baseline as of v0.3.5: **274 tests, 0 failed, ~17 s wall-clock**.
+Expected baseline as of v0.3.6: **274 tests, 0 failed, ~17 s wall-clock**.
 If your local run shows materially different numbers without an intervening
 code change, something is wrong with the environment, not the code — first
 suspect is `pip install -e ".[dev]" --break-system-packages` not having been
@@ -329,7 +329,7 @@ in one class.
 
 ## 6. Coverage interpretation
 
-Run `make test-cov` to produce a per-module breakdown. The v0.3.5 baseline:
+Run `make test-cov` to produce a per-module breakdown. The v0.3.6 baseline:
 
 | Module                        | Coverage | Acceptable? |
 |-------------------------------|----------|-------------|
@@ -534,6 +534,39 @@ suite headless and deterministic.
 
 For the historical record:
 
+- **v0.3.6 — Wage-splice series ID correction**. The `WAGE_LEGACY_SERIES`
+  constant declared in v0.3.5 was `M0844AUSM052NNBR`, which is not a real
+  FRED series ID. FRED returned a 400 Bad Request when `make data` tried
+  to download it. The correct NBER pre-1939 manufacturing wage series on
+  FRED is `M08142USM055NNBR` ("Average Hourly Earnings, Twenty-Five
+  Manufacturing Industries", monthly, Jan 1920 - Jul 1948), which is what
+  the wage splice now uses. Updated the constant, the `FRED_SERIES`
+  catalog entry, the README, `DATA_ACQUISITION.md`, the test fixture name,
+  and the synthetic-data helper. The `TestCatalogIntegrity` tests added in
+  v0.3.5 caught the constant ↔ catalog drift but cannot catch this class
+  of "ID is in the catalog but doesn't exist on FRED" bug, which requires
+  a live API call. See §10.6 for the remaining residual risk.
+
+### 10.6 Live API drift (unaddressed)
+
+Even with `TestCatalogIntegrity` enforcing constant↔catalog consistency,
+the offline test suite cannot catch:
+
+- Series IDs that have never been valid on FRED (typo or hallucination
+  during catalog editing — what bit us in v0.3.5)
+- Series IDs that were valid but have since been discontinued or renamed
+  (what bit us with `WILL5000IND` in v0.3.4 → v0.3.5)
+
+Validating these requires live network access and an API key, which we
+keep out of the CI suite by design (see §10.3). The pragmatic mitigation
+is a manual acceptance check whenever the catalog changes: after editing
+`FRED_SERIES`, run `make data` against a real `FRED_API_KEY` once before
+merging. If any series 400s, fix the catalog entry.
+
+A `tools/verify_catalog.py` script that hits FRED for each catalog entry
+and reports validity is a candidate for v0.4 — useful for a maintainer
+adding new series without having to do a full `make data` run.
+
 - **v0.3.5 — FRED catalog integrity**. Added `M0844AUSM052NNBR` (the NBER
   pre-1939 manufacturing wage series) to `FRED_SERIES`. The wage splice
   declared this constant as `WAGE_LEGACY_SERIES` but the catalog never
@@ -611,4 +644,4 @@ For the historical record:
 
 ---
 
-*Last updated: v0.3.5. Maintained by the `rpps` authors.*
+*Last updated: v0.3.6. Maintained by the `rpps` authors.*

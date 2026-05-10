@@ -99,10 +99,15 @@ FRED_SERIES: dict[str, FredSeries] = {
     "AHETPI": FredSeries(
         "AHETPI", "Avg Hourly Earnings of Production and Nonsupervisory Employees", "M", 1939, "wage",
         notes="Principal nominal wage series. Spliced with M0844 pre-1939."),
-    "M0844AUSM052NNBR": FredSeries(
-        "M0844AUSM052NNBR", "Average Hourly Earnings of Production Workers in Manufacturing (NBER)", "M", 1923, "wage",
-        notes="NBER Macrohistory mirror on FRED. Pre-1939 leg of the wage splice "
-              "(see rpps.nber_splice.WAGE_LEGACY_SERIES)."),
+    "M08142USM055NNBR": FredSeries(
+        "M08142USM055NNBR",
+        "Average Hourly Earnings, Twenty-Five Manufacturing Industries (NBER)",
+        "M", 1920, "wage",
+        notes="NBER Macrohistory mirror on FRED (chapter 8: Income and Employment). "
+              "Pre-1939 leg of the wage splice (see rpps.nber_splice.WAGE_LEGACY_SERIES). "
+              "Source: National Industrial Conference Board, 'Wages, Hours, and "
+              "Employment in the United States, 1914-1936' and successor publications. "
+              "Coverage: Jan 1920 - Jul 1948."),
     "CES0500000003": FredSeries(
         "CES0500000003", "Avg Hourly Earnings of All Employees: Total Private", "M", 2006, "wage"),
     "COMPRNFB": FredSeries(

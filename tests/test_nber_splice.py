@@ -425,10 +425,10 @@ def _synthetic_ahetpi() -> pd.Series:
     return pd.Series(values, index=idx, name="AHETPI")
 
 
-def _synthetic_m0844() -> pd.Series:
+def _synthetic_legacy_wage() -> pd.Series:
     idx = pd.date_range("1925-01-01", "1942-12-01", freq="MS")
     values = np.linspace(0.20, 0.80, len(idx))
-    return pd.Series(values, index=idx, name="M0844AUSM052NNBR")
+    return pd.Series(values, index=idx, name="M08142USM055NNBR")
 
 
 def _synthetic_ophnfb() -> pd.Series:
@@ -446,7 +446,7 @@ class TestBuildWageSplice:
 
         def fake_load_series(series_id, *args, **kwargs):
             if series_id == nber_splice.WAGE_LEGACY_SERIES:
-                return _synthetic_m0844()
+                return _synthetic_legacy_wage()
             if series_id == nber_splice.WAGE_MODERN_SERIES:
                 return _synthetic_ahetpi()
             raise KeyError(series_id)
@@ -462,7 +462,7 @@ class TestBuildWageSplice:
 
         def fake_load_series(series_id, *args, **kwargs):
             if series_id == nber_splice.WAGE_LEGACY_SERIES:
-                return _synthetic_m0844()
+                return _synthetic_legacy_wage()
             if series_id == nber_splice.WAGE_MODERN_SERIES:
                 return _synthetic_ahetpi()
             raise KeyError(series_id)
@@ -507,7 +507,7 @@ class TestBuildSplicedDataset:
 
         def fake_load_series(series_id, *args, **kwargs):
             if series_id == nber_splice.WAGE_LEGACY_SERIES:
-                return _synthetic_m0844()
+                return _synthetic_legacy_wage()
             if series_id == nber_splice.WAGE_MODERN_SERIES:
                 return _synthetic_ahetpi()
             if series_id == nber_splice.PROD_MODERN_SERIES:
@@ -531,7 +531,7 @@ class TestBuildSplicedDataset:
         # Patch load_series to give wages, but force Kendrick file missing.
         def fake_load_series(series_id, *args, **kwargs):
             if series_id == nber_splice.WAGE_LEGACY_SERIES:
-                return _synthetic_m0844()
+                return _synthetic_legacy_wage()
             if series_id == nber_splice.WAGE_MODERN_SERIES:
                 return _synthetic_ahetpi()
             if series_id == nber_splice.PROD_MODERN_SERIES:
