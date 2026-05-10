@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: "Real Purchasing Power Simulator: MTS Pillar 6 — Welfare Measurement Analysis"
+message: "If you use this software, please cite both the simulator and the companion working paper."
+type: software
+version: 0.1.0
+date-released: 2026-05-08
+license: Apache-2.0
+repository-code: "https://github.com/rjgreenresearch/real-purchasing-power-simulator"
+authors:
+  - family-names: Green
+    given-names: Robert J.
+    orcid: "https://orcid.org/0009-0002-9097-1021"
+    affiliation: "Independent researcher; rjgreenresearch.org"
+keywords:
+  - welfare measurement
+  - real wages
+  - productivity
+  - purchasing power
+  - inflation
+  - structural breaks
+  - Bai-Perron
+  - FRED
+  - NBER Macrohistory
+  - Mutual Threshold Saturation
+  - MTS doctrine
+references:
+  - type: article
+    title: "The Inflationary Yardstick: A Mutual Threshold Saturation Critique of Nominal Wage Growth as a Welfare Metric, 1925–2025"
+    authors:
+      - family-names: Green
+        given-names: Robert J.
+    year: 2026
+    notes: "Working Paper, Stage 1: Theoretical Framework and Pre-Analysis Plan."
